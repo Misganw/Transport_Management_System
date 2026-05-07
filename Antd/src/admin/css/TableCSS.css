@@ -1,0 +1,77 @@
+/* Narrow table rows */
+.ant-table-tbody > tr > td,
+.ant-table-thead > tr > th {
+  padding: 1px 1px !important;
+  font-size: 12px;
+  /* border: 1px solid #d9d9d9; Add column and row borders */
+}
+
+.stripedTable .rowColerOne td {
+  background-color: #fefeff;
+}
+
+.stripedTable .rowColerTwo td {
+  background-color: #e2e7ec;
+}
+
+/* .compactTable .ant-table-tbody > tr > td,
+.compactTable .ant-table-thead > tr > th {
+  padding: 4px 6px;
+  font-size: 12px;
+  line-height: 1.2;
+} */
+.coloredHeader .ant-table-thead > tr > th {
+  background-color: #005f73;
+  color: #fcfcfc;
+  font-weight: 600;
+  /* border: 1px solid #d9d9d9; Add header borders too */
+}
+
+/* .coloredHeader .ant-table-thead > tr > th:hover {
+  background-color: #005f73;
+  color: #fcfcfc;
+  font-weight: 600;
+} */
+
+/* Remove default gradient/overlay */
+.coloredHeader .ant-table-thead > tr > th::before {
+  display: none;
+}
+
+/* Sort icons (up & down arrows) */
+.coloredHeader .ant-table-column-sorter {
+  color: #ffffff;
+}
+
+/* Filter (funnel) icon */
+.coloredHeader .ant-table-filter-trigger {
+  color: #ffffff;
+}
+
+/* Active sort / filter icons */
+.coloredHeader .ant-table-column-sorter-active,
+.coloredHeader .ant-table-filter-trigger.active {
+  color: #ffffff;
+}
+
+/* SVG icons inside header */
+.coloredHeader .ant-table-thead svg {
+  fill: #ffffff;
+}
+
+/* Prevent AntD hover color override */
+/* .coloredHeader .ant-table-thead > tr > th:hover {
+  color: #ffffff;
+} */
+
+/* Keep header color when sorted (clicked) */
+.coloredHeader .ant-table-thead > tr > th.ant-table-column-sort {
+  background-color: #005f73 !important;
+  color: #fcfcfc;
+}
+
+/* Keep header color on hover */
+.coloredHeader .ant-table-thead > tr > th:hover {
+  background-color: #005f73 !important;
+  color: #fcfcfc;
+}

@@ -1,0 +1,173 @@
+/* Wrapper to center everything */
+.login-wrapper {
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to right, #f0f4ff, #e6faff);
+  padding: 40px;
+}
+
+/* Card container */
+.login-container {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+  padding: 10px 10px;
+  text-align: center;
+}
+
+/* Logo */
+.login-logo img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+/* Title */
+.login-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* Form */
+.login-form .ant-form-item-label > label {
+  font-weight: 500;
+  color: #444;
+}
+/* Container for the signup two-column layout */
+.signUP {
+  display: flex;
+  gap: 20px; /* space between left and right */
+}
+.signUpHeader {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: nowrap; /* ← prevents wrapping*/
+}
+
+/* Each column */
+.leftSignup,
+.rightSignup {
+  flex: 1; /* take equal space */
+  min-width: 0; /* prevent overflow */
+}
+
+/* Make form items inside columns full width */
+.leftSignup .ant-form-item,
+.rightSignup .ant-form-item {
+  width: 100%;
+}
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 768px) {
+  .signUP {
+    flex-direction: column;
+  }
+}
+
+/* Buttons */
+.login-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.login-actions button {
+  flex: 1;
+  border-radius: 8px;
+}
+
+/* Signup link */
+.login-signup {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.login-signup a {
+  color: #1677ff;
+  font-weight: 500;
+}
+
+/* Social login */
+.login-social {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 7px;
+}
+
+.google-btn {
+  color: #db4437;
+  border-color: #db4437;
+}
+
+.facebook-btn {
+  color: #1877f2;
+  border-color: #1877f2;
+}
+
+.twitter-btn {
+  color: #1da1f2;
+  border-color: #1da1f2;
+}
+
+/* Responsive */
+/* Large tablets / small desktops (up to 1024px) */
+@media (max-width: 1024px) {
+  .login-wrapper {
+    padding: 30px;
+    margin-bottom: 0px;
+  }
+  .login-container {
+    width: 1000px;
+    padding: 35px;
+  }
+  .login-actions button {
+    padding: 9px 18px;
+  }
+}
+
+/* Tablets / landscape phones (up to 768px) */
+@media (max-width: 768px) {
+  .login-wrapper {
+    padding: 30px;
+    margin-bottom: 0px;
+  }
+  .login-container {
+    width: 600px;
+    padding: 30px;
+  }
+  .login-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .login-actions button {
+    width: 100%;
+  }
+}
+
+/* Mobile / small devices (up to 480px) */
+@media (max-width: 480px) {
+  .login-wrapper {
+    padding: 20px;
+    margin-bottom: 0px;
+  }
+  .login-container {
+    width: 100%;
+    padding: 25px 20px;
+  }
+  .login-actions {
+    flex-direction: column;
+  }
+  .login-actions button {
+    width: 100%;
+  }
+}

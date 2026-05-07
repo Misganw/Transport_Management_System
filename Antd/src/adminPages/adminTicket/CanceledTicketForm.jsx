@@ -1,0 +1,95 @@
+// src/modules/Cars/CarsForm.jsx
+import React, { useState, useEffect } from "react";
+import DynamicForm from "../../admin/common/DynamicForm";
+// import { ownerByCompany } from "../../admin/common/makeServices";
+import { Form } from "antd";
+import dayjs from "dayjs";
+import {
+  routService,
+  carServices,
+  cancelledTicketServices,
+  ticketService,
+} from "../../admin/common/makeServices";
+
+export default function CanceledTicketForm({
+  initialValues = {},
+  onFinish,
+  onCancel,
+}) {
+  const [form] = Form.useForm();
+  const [rout, setRout] = useState([]);
+  const [car, setCar] = useState([]);
+
+  const ticketFields = [
+    {
+      name: "passengerName",
+      label: "Passenger Name",
+      type: "text",
+      colSpan: 12,
+      props: { disabled: true },
+      rules: [{ required: true }],
+    },
+    {
+      name: "email",
+      label: "Email",
+      type: "text",
+      colSpan: 12,
+      rules: [{ required: false }],
+    },
+    {
+      name: "phone",
+      label: "Phone",
+      type: "text",
+      colSpan: 12,
+      rules: [{ required: false }],
+    },
+    {
+      name: "paymentStatus",
+      label: "Payment Status",
+      type: "select",
+      colSpan: 12,
+      initialValues: "",
+      props: {
+        options: [
+          { label: "Pending", value: "pending" },
+          { label: "Paid", value: "paid" },
+        ],
+        placeholder: "Select Status",
+      },
+      rules: [{ required: true }],
+    },
+    {
+      name: "paymentMethod",
+      label: "Payment Method",
+      type: "select",
+      colSpan: 12,
+      initialValues: "",
+      props: {
+        options: [
+          { label: "Cash", value: "cash" },
+          { label: "Stripe", value: "stripe" },
+          { label: "TeleBirr", value: "telebirr" },
+          { label: "Mobile Banking", value: "mobileBanking" },
+          { label: "Chapa", value: "chapa" },
+          { label: "ArifPay", value: "arifpay" },
+          { label: "Bank Transfer", value: "bankTransfer" },
+          { label: "Pay Pal", value: "paypal" },
+          { label: "ZELLE", value: "zelle" },
+        ],
+        placeholder: "Select Status",
+      },
+      rules: [{ required: true }],
+    },
+  ];
+  return (
+    <DynamicForm
+      form={form}
+      fields={ticketFields}
+      initialValues={{
+        ...initialValues,
+      }}
+      onFinish={onFinish}
+      onCancel={onCancel}
+    />
+  );
+}

@@ -1,0 +1,52 @@
+/* Page container */
+.otp-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #7fbdf8, #bbf799);
+  padding: 20px;
+}
+
+/* OTP card */
+.otp-box {
+  background: #fff;
+  padding: 32px 28px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+/* Title */
+.otp-title {
+  margin-bottom: 12px !important;
+  color: #1890ff !important;
+}
+
+/* Form wrapper */
+.otp-form {
+  margin-top: 24px;
+}
+
+/* OTP input alignment */
+.otp-input-wrapper {
+  margin: 20px 0;
+}
+
+/* Submit button */
+.otp-submit {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  .otp-box {
+    padding: 24px 20px;
+  }
+}

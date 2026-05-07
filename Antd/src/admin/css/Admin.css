@@ -1,0 +1,84 @@
+.adminContainer {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  z-index: 0.5;
+}
+.AdminHeader {
+  position: fixed;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  width: 100%;
+  box-shadow: 0px 1px 3px rgb(216, 216, 216);
+  padding: 5px;
+}
+.leftHeader {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+}
+.leftHeader .headerLogo {
+  width: 60px;
+}
+.middleHeader .dHeading {
+  margin-bottom: 0px;
+}
+/* rightHeader */
+.rightHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  align-items: center;
+  column-gap: 5px;
+}
+.rightHeader .belicon {
+  width: 40px;
+  border-radius: 50%;
+}
+.rightHeader .iconPicture {
+  width: 50px;
+  border-radius: 100%;
+}
+.rightHeader .reactIcon {
+  width: 40px;
+  border-radius: 100%;
+}
+
+.spaceSize {
+  display: flex;
+  flex: 1;
+  align-items: start;
+  margin-top: 70px;
+}
+.AdminSideBar {
+  position: fixed;
+  overflow: scroll;
+}
+
+.AdminBody {
+  position: fixed;
+  margin-left: 140px;
+}
+.AdminFooter {
+  box-shadow: -1px 0px 3px rgb(216, 216, 216);
+  margin-bottom: 0px;
+}
+.AdminFooter .upperFooter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.AdminFooter .lowerFooter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
