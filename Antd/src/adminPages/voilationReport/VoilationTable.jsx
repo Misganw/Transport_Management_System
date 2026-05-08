@@ -70,7 +70,6 @@ const columnsViolation = [
     title: "Reported Date",
     dataIndex: "date",
     key: "date",
-    render: (date) => (date ? dayjs(date).format("YYYY-MM-DD") : "No Date"),
     sorter: (a, b) => a.date - b.date,
   },
   {
@@ -207,6 +206,9 @@ export default function VoilationTable() {
         FormComponent={VoilationForm}
         transformRecord={(r) => ({
           ...r,
+          date: r.createdAt
+            ? dayjs(r.createdAt).format("YYYY-MM-DD")
+            : "No Date", // Use createdAt for sorting and display
           rout: `${r.ticketId?.programId?.routId?.departure || "Unknown"} <-> ${
             r.ticketId?.programId?.routId?.arrival || "Unknown"
           }`.trim(),
@@ -222,7 +224,7 @@ export default function VoilationTable() {
           reporter:
             r.userId?.roles === "passenger"
               ? `${r.ticketId?.passengerId?.fName || ""} ${r.ticketId?.passengerId?.lName || ""} | ${r.ticketId?.passengerId?.phone || ""}`
-              : "Unknown",
+              : "By Admin",
           voilated: r.ruleID?.title || "Unknown",
           status: r.Status || "Unknown",
         })}

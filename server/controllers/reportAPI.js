@@ -61,7 +61,7 @@ const list = async (req, res) => {
         populate: [
           {
             path: "trafficOfficerId",
-            select: "fName mName phone",
+            select: "fName mName lName phone",
           },
           {
             path: "subrouteId",
@@ -162,12 +162,9 @@ export const getTicketId = async (req, res) => {
       ],
     });
     if (tickets.length === 0) {
-      return res
-        .status(404)
-        .json({
-          message:
-            "Tickets not found. Either not reserved or unpaid (Expired).",
-        });
+      return res.status(404).json({
+        message: "Tickets not found. Either not reserved or unpaid (Expired).",
+      });
     }
 
     res.json(tickets);

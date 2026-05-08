@@ -81,7 +81,7 @@ export default function UserForm({ initialValues = {}, onFinish, onCancel }) {
           label: `${emp.name}`,
           value: emp._id,
           email: emp.email, // include email for auto-fill
-        }))
+        })),
       );
     }
 

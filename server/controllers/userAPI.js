@@ -46,7 +46,7 @@ const getOne = async (req, res) => {
   try {
     const user = await Users.findById(req.params.id).populate(
       "companyId",
-      "companyName"
+      "companyName",
     ); // fetch only companyName
     res.json(user);
   } catch (error) {
