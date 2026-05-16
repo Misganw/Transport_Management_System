@@ -1,5 +1,6 @@
 import express from "express";
 import Employee from "../models/employeeModel.js";
+import Traffice from "../models/traficPoliceModel.js";
 import Users from "../models/userModel.js";
 import Company from "../models/companyModel.js";
 import bcrypt from "bcryptjs";
@@ -64,7 +65,7 @@ const create = async (req, res) => {
         .json({ message: "Authenticated user missing companyId" });
     }
 
-    const { password, employeeId, ...rest } = req.body;
+    const { password, employeeId, roles, ...rest } = req.body;
 
     const existingUser = await Users.findOne({
       $or: [{ employeeId: employeeId }],
@@ -76,14 +77,31 @@ const create = async (req, res) => {
       });
     }
 
-    // 1️⃣ Find selected employee
-    const employee = await Employee.findById(employeeId);
-    if (!employee) {
-      return res.status(404).json({ message: "Employee not found" });
-    }
-
     // 2️⃣ Hash password
     const hashedPassword = await bcrypt.hash(password, 6);
+
+    let sourceData = "";
+    if (roles.includes("officer")) {
+      // Find selected traffic police
+      const traffic = await Traffice.findById(employeeId);
+      if (!traffic) {
+        return res.status(404).json({ message: "Traffic Police not found" });
+      }
+      sourceData = traffic;
+    } else if (
+      roles.includes("manager") ||
+      roles.includes("admin") ||
+      roles.includes("coordinator")
+    ) {
+      // 1️⃣ Find selected employee
+      const employee = await Employee.findById(employeeId);
+      if (!employee) {
+        return res.status(404).json({ message: "Employee not found" });
+      }
+      sourceData = employee;
+    } else {
+      return res.status(400).json({ message: "Invalid role for user" });
+    }
 
     // 3️⃣ Build payload
     const payload = {
@@ -91,18 +109,19 @@ const create = async (req, res) => {
       password: hashedPassword,
       companyId: user.companyID,
       userId: user.id || user._id,
-      employeeId: employee._id,
 
-      firstName: employee.fName,
-      middleName: employee.mName,
-      lastName: employee.lName,
-      name: [employee.fName, employee.mName, employee.lName]
+      employeeId: sourceData._id,
+
+      firstName: sourceData.fName,
+      middleName: sourceData.mName,
+      lastName: sourceData.lName,
+      name: [sourceData.fName, sourceData.mName, sourceData.lName]
         .filter(Boolean)
         .join(" "),
-      age: employee.age,
-      gender: employee.gender,
-      profileImage: employee.profileImage,
-      // email: employee.email,
+      age: sourceData.age,
+      gender: sourceData.gender,
+      profileImage: sourceData.profileImage,
+      // email: sourceData.email,
     };
     // console.log("Payload for new user:", employeeId, payload);
 
@@ -114,7 +133,10 @@ const create = async (req, res) => {
     delete userResponse.password;
 
     res.json(userResponse);
+
+    console.log("sourceData:", sourceData);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Error creating Users" });
   }
 };

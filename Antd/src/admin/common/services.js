@@ -18,13 +18,13 @@ instance.interceptors.response.use(
   (error) => {
     error.message = error.response?.data?.message || "Something went wrong";
     return Promise.reject(error);
-  }
+  },
 );
 
 export const makeService = (
   resource,
   hasBulkDelete = false,
-  hasRestore = false
+  hasRestore = false,
 ) => ({
   list: (params) => instance.get(`/${resource}`, { params }),
   get: (id) => instance.get(`/${resource}/${id}`),

@@ -47,7 +47,7 @@ import ruleAPI from "./controllers/ruleAPI.js";
 import tarrifAPI, { getByRoute } from "./controllers/tarrifAPI.js";
 import ticketAPI from "./controllers/ticketAPI.js";
 import trafficPoliceAPI, {
-  getTrafficPolicesBycompany,
+  getTrafficPoliceBycompany,
 } from "./controllers/trafficPoliceAPI.js";
 import trafficAssignmentAPI from "./controllers/trafficAssignmentAPI.js";
 import countryAPI from "./controllers/address/countryAPI.js";
@@ -223,6 +223,8 @@ app.use(
   commonRouter(trafficPoliceAPI, permissions.trafficPolice),
 ); //trafficPolice routes
 
+app.get("/getTrafficPoliceBycompany", getUserID, getTrafficPoliceBycompany); // traffic police by company routes
+
 app.use(
   "/policeAssignment",
   getUserID,
@@ -272,7 +274,7 @@ app.get("/programsbyRoute/:routId", getprogramByRoute);
 app.get("/tarrifsbyRoute/:routId", getByRoute);
 //ticket
 //trafficPolice
-app.get("/", getUserID, getTrafficPolicesBycompany);
+app.get("/", getUserID, getTrafficPoliceBycompany);
 //trafficAssignment
 //Ttaffic Assignment
 //country

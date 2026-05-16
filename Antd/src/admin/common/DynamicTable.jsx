@@ -35,6 +35,7 @@ export default function DynamicTable({
   columnsDef,
   service,
   FormComponent,
+  TPFormComponent,
   formFields,
   transformRecord,
   renderExpanded,
@@ -57,6 +58,7 @@ export default function DynamicTable({
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
   const [editing, setEditing] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isAddOpenTP, setIsAddOpenTP] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [ViewTickets, setViewTickets] = useState(null);
 
@@ -250,6 +252,23 @@ export default function DynamicTable({
       extra={
         <Space>
           {/* .........Adding Button ......... */}
+          <Button
+            icon={<PlusOutlined />}
+            type="primary"
+            size="small"
+            onClick={() => setIsAddOpenTP(true)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              fontSize: "16px",
+              gap: "8px",
+              height: "26px",
+            }}
+            disabled={hideCreate}
+          >
+            Add for TP
+          </Button>
+
           <Button
             icon={<PlusOutlined />}
             type="primary"
@@ -469,33 +488,62 @@ export default function DynamicTable({
           </Select>
         </div>
       </div>
+
       {/* Add modal */}
       {!hideCreate && FormComponent && (
-        <Modal
-          open={isAddOpen}
-          onCancel={() => setIsAddOpen(false)}
-          footer={null}
-          width="90%"
-          style={{ maxWidth: 700 }}
-        >
-          <FormComponent
-            onFinish={async (vals) => {
-              try {
-                await service.create(vals);
-                // message.success("Created");
-                toast.success("Data Created");
-                setIsAddOpen(false);
-                queryClient.invalidateQueries([resourceName]);
-              } catch (error) {
-                console.error("Error creating data:", error);
-                toast.error(
-                  error.response?.data?.message || "Error creating data!",
-                );
-              }
-            }}
+        <>
+          <Modal
+            open={isAddOpen}
             onCancel={() => setIsAddOpen(false)}
-          />
-        </Modal>
+            footer={null}
+            width="90%"
+            style={{ maxWidth: 700 }}
+          >
+            <FormComponent
+              onFinish={async (vals) => {
+                try {
+                  await service.create(vals);
+                  // message.success("Created");
+                  toast.success("Data Created");
+                  setIsAddOpen(false);
+                  queryClient.invalidateQueries([resourceName]);
+                } catch (error) {
+                  console.error("Error creating data:", error);
+                  toast.error(
+                    error.response?.data?.message || "Error creating data!",
+                  );
+                }
+              }}
+              onCancel={() => setIsAddOpen(false)}
+            />
+          </Modal>
+
+          <Modal
+            open={isAddOpenTP}
+            onCancel={() => setIsAddOpenTP(false)}
+            footer={null}
+            width="90%"
+            style={{ maxWidth: 700 }}
+          >
+            <TPFormComponent
+              onFinish={async (vals) => {
+                try {
+                  await service.create(vals);
+                  // message.success("Created");
+                  toast.success("Data Created");
+                  setIsAddOpenTP(false);
+                  queryClient.invalidateQueries([resourceName]);
+                } catch (error) {
+                  console.error("Error creating data:", error);
+                  toast.error(
+                    error.response?.data?.message || "Error creating data!",
+                  );
+                }
+              }}
+              onCancel={() => setIsAddOpenTP(false)}
+            />
+          </Modal>
+        </>
       )}
     </Card>
   );

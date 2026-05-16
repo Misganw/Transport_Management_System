@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import DynamicTable from "./common/DynamicTable";
 // import { makeService } from "../../admin/common/services";
 import UserForm from "./UserForm";
+import TPUserForm from "./TPUserForm";
 import { Avatar, Tag } from "antd";
 import { usersService } from "./common/makeServices";
 import "./css/Admin.css";
@@ -113,6 +114,7 @@ export default function UsersTable() {
       columnsDef={columns}
       service={usersService}
       FormComponent={UserForm}
+      TPFormComponent={TPUserForm}
       transformRecord={(r) => ({
         ...r,
         fullName: `${r.fName || ""} | ${r.mName || ""} | ${

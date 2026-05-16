@@ -37,6 +37,11 @@ export const employeeByCompany = {
     instance.get("/getEmployeesByCompany", { withCredentials: true }),
 };
 
+export const trafficByCompany = {
+  getTrafficPoliceBycompany: () =>
+    instance.get("/getTrafficPoliceBycompany", { withCredentials: true }),
+};
+
 export const ownerByCompany = {
   ...makeService("owners"),
   listByCompany: () => instance.get("/customOwner", { withCredentials: true }),

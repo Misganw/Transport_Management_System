@@ -2,6 +2,7 @@ import express from "express";
 import TrafficPolice from "../models/traficPoliceModel.js";
 import fs from "fs";
 import path from "path";
+import { get } from "http";
 
 //  GET /Employees
 const list = async (req, res) => {
@@ -108,7 +109,7 @@ const remove = async (req, res) => {
   }
 };
 // GET /employees/by-company. This when creating Users Record
-export const getTrafficPolicesBycompany = async (req, res) => {
+export const getTrafficPoliceBycompany = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
 
