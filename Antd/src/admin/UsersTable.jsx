@@ -1,5 +1,5 @@
 // src/modules/employees/employeesTable.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import DynamicTable from "./common/DynamicTable";
 // import { makeService } from "../../admin/common/services";
 import UserForm from "./UserForm";
@@ -9,6 +9,7 @@ import { usersService } from "./common/makeServices";
 import "./css/Admin.css";
 import "./css/AdminPage.css";
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { AppContext } from "../context/AppContext";
 
 // const service = makeService("employees");
 
@@ -107,6 +108,19 @@ const columns = [
 
 export default function UsersTable() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
+  // ROLE Filteration for actions
+  const rawRoles = useContext(AppContext)?.userData?.roles;
+  const roles = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+  const hasRole = (...allowedRoles) => {
+    return roles.some((r) => allowedRoles.includes(r));
+  };
+  const canCreate = hasRole("admin", "manager");
+  const canEdit = hasRole("admin", "manager");
+  const canDelete = hasRole("admin", "manager");
+  const canView = hasRole("admin", "manager");
+  const canRestore = hasRole("admin", "manager");
+  // ROLE Filteration for actions
+
   return (
     <DynamicTable
       title="Users"
@@ -115,6 +129,7 @@ export default function UsersTable() {
       service={usersService}
       FormComponent={UserForm}
       TPFormComponent={TPUserForm}
+      hideAddTP
       transformRecord={(r) => ({
         ...r,
         fullName: `${r.fName || ""} | ${r.mName || ""} | ${

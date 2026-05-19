@@ -1,5 +1,5 @@
 // src/modules/employees/employeesTable.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import DynamicTable from "../../admin/common/DynamicTable";
 // import { makeService } from "../../admin/common/services";
 import EmployeeForm from "./EmployeeForm";
@@ -14,6 +14,7 @@ import {
 } from "../../admin/common/makeServices";
 import "../../admin/css/Admin.css";
 import "../../admin/css/AdminPage.css";
+import { AppContext } from "../../context/AppContext";
 
 // const service = makeService("employees");
 
@@ -63,6 +64,19 @@ const columns = [
 
 export default function EmployeeTable() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+  // ROLE Filteration for actions
+  const rawRoles = useContext(AppContext)?.userData?.roles;
+  const roles = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+  const hasRole = (...allowedRoles) => {
+    return roles.some((r) => allowedRoles.includes(r));
+  };
+  const canCreate = hasRole("admin", "manager");
+  const canEdit = hasRole("admin", "manager");
+  const canDelete = hasRole("admin", "manager");
+  const canView = hasRole("admin", "manager");
+  const canRestore = hasRole("admin", "manager");
+  // ROLE Filteration for actions
   return (
     <DynamicTable
       title="employees"
@@ -70,6 +84,11 @@ export default function EmployeeTable() {
       columnsDef={columns}
       service={employeeServices}
       FormComponent={EmployeeForm}
+      canCreate={canCreate}
+      canEdit={canEdit}
+      canDelete={canDelete}
+      canView={canView}
+      canRestore={canRestore}
       transformRecord={(r) => ({
         ...r,
         fullName: `${r.fName || ""} | ${r.mName || ""} | ${

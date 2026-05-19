@@ -6,7 +6,7 @@ import { Form } from "antd";
 
 export const userFields = [
   {
-    name: "employeeId",
+    name: "user_Id",
     label: "Employee Name",
     type: "select",
     colSpan: 12,
@@ -104,7 +104,7 @@ export default function UserForm({ initialValues = {}, onFinish, onCancel }) {
     <DynamicForm
       form={form}
       fields={userFields.map((f) => {
-        if (f.name === "employeeId") {
+        if (f.name === "user_Id") {
           return {
             ...f,
             props: {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useContext } from "react";
 import {
   Card,
   Table,
@@ -26,6 +26,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { io } from "socket.io-client";
 import { socket } from "./socket.js";
+import { AppContext } from "../../context/AppContext.jsx";
 
 // ....... end of import ........
 
@@ -41,12 +42,18 @@ export default function DynamicTable({
   renderExpanded,
   hideCreate = false,
   hideEdit = false,
+  hideAddTP = false,
   deleteLabel = "Delete",
   onRestore,
   onRestoreMany,
 
   ticketProgramId,
   onTicketExpandChange,
+  canCreate,
+  canEdit,
+  canDelete,
+  canView,
+  canRestore,
 }) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -61,6 +68,8 @@ export default function DynamicTable({
   const [isAddOpenTP, setIsAddOpenTP] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [ViewTickets, setViewTickets] = useState(null);
+
+  const { userData } = useContext(AppContext);
 
   // const socket = io(import.meta.env.VITE_BACKEND_URL, {
   //   withCredentials: true,
@@ -115,6 +124,7 @@ export default function DynamicTable({
     setVisibleColumns(columnsDef.map((c) => c.key || c.dataIndex));
   }, [columnsDef]);
 
+  const roles = userData?.roles || [];
   // const filtered = useMemo(
   //   () =>
   //     data.filter((d) =>
@@ -201,9 +211,26 @@ export default function DynamicTable({
           <Dropdown
             menu={{
               items: [
-                { key: "edit", label: "Edit" },
-                { key: "delete", label: "Delete" },
-                { key: "view", label: "View" },
+                {
+                  key: "edit",
+                  label: "Edit",
+                  disabled: !canEdit,
+                  title: !canEdit ? "You don't have permission to edit" : "",
+                },
+                {
+                  key: "delete",
+                  label: "Delete",
+                  disabled: !canDelete,
+                  title: !canDelete
+                    ? "You don't have permission to delete"
+                    : "",
+                },
+                {
+                  key: "view",
+                  label: "View",
+                  disabled: !canView,
+                  title: !canView ? "You don't have permission to view" : "",
+                },
               ],
               onClick: ({ key }) => {
                 if (key === "edit") {
@@ -264,7 +291,7 @@ export default function DynamicTable({
               gap: "8px",
               height: "26px",
             }}
-            disabled={hideCreate}
+            hidden={hideCreate || !hideAddTP}
           >
             Add for TP
           </Button>
@@ -281,7 +308,7 @@ export default function DynamicTable({
               gap: "8px",
               height: "26px",
             }}
-            disabled={hideCreate}
+            hidden={hideCreate || !canCreate}
           >
             Add
           </Button>
@@ -292,7 +319,8 @@ export default function DynamicTable({
             type="primary"
             danger
             size="small"
-            disabled={selectedRowKeys.length === 0}
+            title={!canDelete ? "You don't have permission to delete" : ""}
+            disabled={selectedRowKeys.length === 0 || !canDelete}
             style={{
               display: "flex",
               alignItems: "center",
@@ -517,7 +545,12 @@ export default function DynamicTable({
               onCancel={() => setIsAddOpen(false)}
             />
           </Modal>
+        </>
+      )}
 
+      {/* Add modal */}
+      {hideAddTP && TPFormComponent && (
+        <>
           <Modal
             open={isAddOpenTP}
             onCancel={() => setIsAddOpenTP(false)}

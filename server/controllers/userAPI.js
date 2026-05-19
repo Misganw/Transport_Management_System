@@ -65,10 +65,10 @@ const create = async (req, res) => {
         .json({ message: "Authenticated user missing companyId" });
     }
 
-    const { password, employeeId, roles, ...rest } = req.body;
+    const { password, user_Id, roles, ...rest } = req.body;
 
     const existingUser = await Users.findOne({
-      $or: [{ employeeId: employeeId }],
+      $or: [{ user_Id: user_Id }],
     });
 
     if (existingUser) {
@@ -83,7 +83,7 @@ const create = async (req, res) => {
     let sourceData = "";
     if (roles.includes("officer")) {
       // Find selected traffic police
-      const traffic = await Traffice.findById(employeeId);
+      const traffic = await Traffice.findById(user_Id);
       if (!traffic) {
         return res.status(404).json({ message: "Traffic Police not found" });
       }
@@ -94,7 +94,7 @@ const create = async (req, res) => {
       roles.includes("coordinator")
     ) {
       // 1️⃣ Find selected employee
-      const employee = await Employee.findById(employeeId);
+      const employee = await Employee.findById(user_Id);
       if (!employee) {
         return res.status(404).json({ message: "Employee not found" });
       }
@@ -120,6 +120,7 @@ const create = async (req, res) => {
         .join(" "),
       age: sourceData.age,
       gender: sourceData.gender,
+      roles: roles,
       profileImage: sourceData.profileImage,
       // email: sourceData.email,
     };
@@ -134,7 +135,7 @@ const create = async (req, res) => {
 
     res.json(userResponse);
 
-    console.log("sourceData:", sourceData);
+    // console.log("sourceData:", sourceData);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Error creating Users" });

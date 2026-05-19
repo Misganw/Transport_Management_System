@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Table, Tag, Space, Button, Tooltip, Popconfirm, Modal } from "antd";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
@@ -16,6 +16,7 @@ import "../../admin/css/TableCSS.css";
 import PrintableTicket from "./PrintableTicket.jsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { AppContext } from "../../context/AppContext.jsx";
 // ..... end of import .....
 
 dayjs.extend(duration);

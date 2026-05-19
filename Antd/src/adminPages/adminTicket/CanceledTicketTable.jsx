@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Table, Tag, Space, Button, Tooltip, Popconfirm, Modal } from "antd";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
@@ -21,6 +21,7 @@ import { cancelledTicketServices } from "../../admin/common/makeServices.js";
 import DynamicTable from "../../admin/common/DynamicTable.jsx";
 import LeaveLicense from "../adminPrograms/LeaveLicense.jsx";
 import TicketModal from "../adminPrograms/TicketModal.jsx";
+import { AppContext } from "../../context/AppContext.jsx";
 // ..... end of import .....
 
 // ....... END OF IMPORTING .......
@@ -28,6 +29,19 @@ import TicketModal from "../adminPrograms/TicketModal.jsx";
 dayjs.extend(duration);
 
 export default function CanceledTicketTable() {
+  // ROLE Filteration for actions
+  const rawRoles = useContext(AppContext)?.userData?.roles;
+  const roles = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+  const hasRole = (...allowedRoles) => {
+    return roles.some((r) => allowedRoles.includes(r));
+  };
+  const canCreate = hasRole("admin", "manager");
+  const canEdit = hasRole("admin", "manager");
+  const canDelete = hasRole("admin", "manager");
+  const canView = hasRole("admin", "manager");
+  const canRestore = hasRole("admin", "manager");
+  // ROLE Filteration for actions
+
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [, forceTick] = useState(0); // for countdown refresh
@@ -124,6 +138,11 @@ export default function CanceledTicketTable() {
         hideCreate
         // hideEdit
         FormComponent={TicketForm}
+        canCreate={canCreate}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canView={canView}
+        canRestore={canRestore}
         transformRecord={(r) => ({
           ...r,
           Tarrif: r.programId?.tarrif ?? "Unknown",

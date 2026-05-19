@@ -1,5 +1,5 @@
 // src/modules/employees/employeesTable.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import DynamicTable from "../../admin/common/DynamicTable";
 // import { makeService } from "../../admin/common/services";
 import RoutForm from "./RoutForm";
@@ -8,6 +8,7 @@ import { Avatar, Row, Col } from "antd";
 import { routService, tarrifService } from "../../admin/common/makeServices";
 import "../../admin/css/Admin.css";
 import "../../admin/css/AdminPage.css";
+import { AppContext } from "../../context/AppContext";
 
 // const service = makeService("employees");
 
@@ -61,6 +62,20 @@ const columnsTarrif = [
 
 export default function RoutTable() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+  // ROLE Filteration for actions
+  const rawRoles = useContext(AppContext)?.userData?.roles;
+  const roles = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+  const hasRole = (...allowedRoles) => {
+    return roles.some((r) => allowedRoles.includes(r));
+  };
+  const canCreate = hasRole("admin", "manager");
+  const canEdit = hasRole("admin", "manager", "coordinator");
+  const canDelete = hasRole("admin", "manager", "coordinator");
+  const canView = hasRole("admin", "manager", "coordinator", "officer");
+  const canRestore = hasRole("admin", "manager", "coordinator");
+  // ROLE Filteration for actions
+
   return (
     <Row gutter={[16, 16]}>
       <Col xs={24} sm={24} md={24} lg={12} xl={12}>
@@ -70,6 +85,11 @@ export default function RoutTable() {
           columnsDef={columns}
           service={routService}
           FormComponent={RoutForm}
+          canCreate={canCreate}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          canView={canView}
+          canRestore={canRestore}
           transformRecord={(r) => ({
             ...r,
             departure: r.departure,

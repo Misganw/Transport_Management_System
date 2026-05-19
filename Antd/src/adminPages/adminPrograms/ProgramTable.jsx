@@ -97,6 +97,26 @@ const columnsProgram = [
 
 export default function ProgramTable() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+  // ROLE Filteration for actions
+  const rawRoles = useContext(AppContext)?.userData?.roles;
+  const roles = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+  const hasRole = (...allowedRoles) => {
+    return roles.some((r) => allowedRoles.includes(r));
+  };
+  const canCreate = hasRole("admin", "manager", "coordinator");
+  const canEdit = hasRole("admin", "manager", "coordinator");
+  const canDelete = hasRole("admin", "manager", "coordinator");
+  const canView = hasRole(
+    "admin",
+    "manager",
+    "coordinator",
+    "officer",
+    "passeneger",
+  );
+  const canRestore = hasRole("admin", "manager", "coordinator", "officer");
+  // ROLE Filteration for actions
+
   const [reserveProgram, setReserveProgram] = useState(null);
   const [ticketProgramId, setTicketProgramId] = useState(null);
   const { userData } = useContext(AppContext);
@@ -214,6 +234,11 @@ export default function ProgramTable() {
         ]}
         service={programServices}
         FormComponent={ProgramForm}
+        canCreate={canCreate}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canView={canView}
+        canRestore={canRestore}
         transformRecord={(r) => ({
           ...r,
           rout: `${r.routId?.departure || "Unknown"} -> ${

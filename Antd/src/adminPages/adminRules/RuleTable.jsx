@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import DynamicTable from "../../admin/common/DynamicTable";
 
 import { ruleServices } from "../../admin/common/makeServices";
@@ -21,6 +21,7 @@ import "../../admin/css/Admin.css";
 import "../../admin/css/AdminPage.css";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { AppContext } from "../../context/AppContext";
 
 // ....... END OF IMPORTING .......
 
@@ -62,6 +63,25 @@ const columns = [
 export default function RuleTable() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
 
+  // ROLE Filteration for actions
+  const rawRoles = useContext(AppContext)?.userData?.roles;
+  const roles = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+  const hasRole = (...allowedRoles) => {
+    return roles.some((r) => allowedRoles.includes(r));
+  };
+  const canCreate = hasRole("admin", "manager");
+  const canEdit = hasRole("admin", "manager");
+  const canDelete = hasRole("admin", "manager");
+  const canView = hasRole(
+    "admin",
+    "manager",
+    "coordinator",
+    "officer",
+    "passenger",
+  );
+  const canRestore = hasRole("admin", "manager");
+  // ROLE Filteration for actions
+
   return (
     <>
       <DynamicTable
@@ -70,6 +90,11 @@ export default function RuleTable() {
         columnsDef={[...columns]}
         service={ruleServices}
         FormComponent={Rules}
+        canCreate={canCreate}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canView={canView}
+        canRestore={canRestore}
         transformRecord={(r) => ({
           ...r,
           company: r.companyId?.companyName || "N/A",

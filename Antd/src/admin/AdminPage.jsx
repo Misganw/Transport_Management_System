@@ -115,6 +115,26 @@ function AdminPage() {
         return <div>Access Denied!. Passenger role has limited access.</div>;
       }
     }
+    // If officer, restrict access
+    if (roles.includes("officer")) {
+      if (
+        ![
+          "routs",
+          "subrouts",
+          "reports",
+          "programs",
+          "rules",
+          "voilationReport",
+          "police",
+          "asignTpolices",
+          "tickets",
+        ].includes(selectedMenu)
+      ) {
+        return (
+          <div>Access Denied!. Traffic Police role has limited access.</div>
+        );
+      }
+    }
     switch (selectedMenu) {
       case "countryState":
         return <CountryStateTable />;

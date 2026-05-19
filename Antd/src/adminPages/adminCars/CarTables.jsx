@@ -1,10 +1,11 @@
 // src/modules/Cars/CarsTable.jsx
-import React from "react";
+import React, { useContext } from "react";
 import { CarOutlined } from "@ant-design/icons";
 import DynamicTable from "../../admin/common/DynamicTable";
 import { makeService } from "../../admin/common/services";
 import CarsForm from "./CarForms";
 import { carServices } from "../../admin/common/makeServices";
+import { AppContext } from "../../context/AppContext";
 
 // const service = makeService("cars");
 
@@ -53,6 +54,24 @@ const columns = [
 ];
 
 export default function CarsTable() {
+  // ROLE Filteration for actions
+  const rawRoles = useContext(AppContext)?.userData?.roles;
+  const roles = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+  const hasRole = (...allowedRoles) => {
+    return roles.some((r) => allowedRoles.includes(r));
+  };
+  const canCreate = hasRole("admin", "manager", "coordinator");
+  const canEdit = hasRole("admin", "manager", "coordinator");
+  const canDelete = hasRole("admin", "manager", "coordinator");
+  const canView = hasRole(
+    "admin",
+    "manager",
+    "coordinator",
+    "officer",
+    "passenger",
+  );
+  const canRestore = hasRole("admin", "manager", "coordinator", "officer");
+  // ROLE Filteration for actions
   return (
     <DynamicTable
       title="Cars"
@@ -60,6 +79,11 @@ export default function CarsTable() {
       columnsDef={columns}
       service={carServices}
       FormComponent={CarsForm}
+      canCreate={canCreate}
+      canEdit={canEdit}
+      canDelete={canDelete}
+      canView={canView}
+      canRestore={canRestore}
       transformRecord={(r) => ({
         ...r,
         owner: r.ownerId

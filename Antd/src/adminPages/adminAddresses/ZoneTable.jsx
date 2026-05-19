@@ -1,5 +1,5 @@
 // src/modules/Cars/CarsTable.jsx
-import React from "react";
+import React, { useContext } from "react";
 import { CarOutlined } from "@ant-design/icons";
 import DynamicTable from "../../admin/common/DynamicTable";
 import { makeService } from "../../admin/common/services";
@@ -10,6 +10,7 @@ import { countryService } from "../../admin/common/makeServices";
 import { stateService } from "../../admin/common/makeServices";
 import { zoneService } from "../../admin/common/makeServices";
 import { Row, Col, Flex, Table } from "antd";
+import { AppContext } from "../../context/AppContext";
 // import { createStyles } from "antd-style";
 
 // const service = makeService("cars");
@@ -43,6 +44,18 @@ const zoneColumns = [
 ];
 
 export default function ZoneTable() {
+  // ROLE Filteration for actions
+  const rawRoles = useContext(AppContext)?.userData?.roles;
+  const roles = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+  const hasRole = (...allowedRoles) => {
+    return roles.some((r) => allowedRoles.includes(r));
+  };
+  const canCreate = hasRole("admin", "manager");
+  const canEdit = hasRole("admin", "manager");
+  const canDelete = hasRole("admin", "manager");
+  const canView = hasRole("admin", "manager");
+  const canRestore = hasRole("admin", "manager");
+  // ROLE Filteration for actions
   return (
     // <Row gutter={16}>
     //   <Col xs={24} sm={24} md={24} lg={12} xl={12}>
@@ -52,6 +65,11 @@ export default function ZoneTable() {
       columnsDef={zoneColumns}
       service={zoneService}
       FormComponent={ZoneForm}
+      canCreate={canCreate}
+      canEdit={canEdit}
+      canDelete={canDelete}
+      canView={canView}
+      canRestore={canRestore}
       transformRecord={(r) => ({
         ...r,
         state: r.stateId?.stateName || "Unknown",
