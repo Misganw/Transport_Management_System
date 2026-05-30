@@ -22,13 +22,13 @@ import companyRouter from "./routs/companyRouts.js";
 import router from "./routs/routs.js";
 import Countryrouter from "./routs/apiRouts/apiRouts.js";
 import { commonRouter } from "./routs/commonRout.js";
-
 import RoutRouter from "./routs/routRouts.js";
 import TicketRouter from "./routs/ticketRouts.js";
 import TrafficPoliceRouter from "./routs/trafficPoliceRouts.js";
 import SubroutRouter from "./routs/subRoutRouts.js";
 import TrafficAssignmentRouter from "./routs/trafficPoliceAssignmentRouts.js";
 import ReportRouter from "./routs/reportRouts.js";
+import RenalityRouter from "./routs/penalityRouts.js";
 
 //......import Rout.....
 
@@ -89,7 +89,6 @@ app.post(
 // .......... stripe web hook .........
 
 app.use(express.json());
-
 app.use(cookieParser());
 const allowFrontend = ["http://localhost:5173"];
 // app.use(cors({ origin: "http://localhost:5173", credentials: true }));
@@ -103,7 +102,6 @@ app.use(
 
 /* ----------------- CREATE HTTP SERVER ----------------- */
 const server = http.createServer(app);
-
 /* ----------------- SOCKET.IO SETUP ----------------- */
 const io = new Server(server, {
   cors: {
@@ -161,10 +159,10 @@ app.use("/", companyRouter); // company routes
 app.use("/", RoutRouter); // Rout routes
 app.use("/", TicketRouter); // Ticket routes
 app.use("/", TrafficPoliceRouter); // Traffic Police routes
+app.use("/", RenalityRouter); //penality routes
 app.use("/routsForSubrout", SubroutRouter); // Subrout routes
 app.use("/tpassignment", TrafficAssignmentRouter);
 app.use("/voilationReports", ReportRouter); //report routes
-
 app.use("/cars", getUserID, commonRouter(carAPI, permissions.cars)); //car routes
 
 //employee

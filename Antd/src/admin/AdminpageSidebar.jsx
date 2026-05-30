@@ -22,6 +22,7 @@ import {
   IdcardOutlined,
   DeleteColumnOutlined,
   CloseOutlined,
+  MoneyCollectOutlined,
 } from "@ant-design/icons";
 import "./css/AdminPage.css";
 import { AppContext } from "../context/AppContext";
@@ -67,6 +68,11 @@ function AdminpageSidebar(props) {
               icon: <UserSwitchOutlined />,
               label: "Employees",
             },
+            {
+              key: "drivers",
+              icon: <UsergroupAddOutlined />,
+              label: "Drivers",
+            },
             { key: "users", icon: <UsergroupAddOutlined />, label: "Users" },
             { key: "owners", icon: <GroupOutlined />, label: "Owners" },
             { key: "routs", icon: <HeatMapOutlined />, label: "Routs" },
@@ -95,7 +101,11 @@ function AdminpageSidebar(props) {
               icon: <CloseOutlined />,
               label: "Voilation Report",
             },
-
+            {
+              key: "PenalityPayment",
+              icon: <MoneyCollectOutlined />,
+              label: "Penality Payment",
+            },
             {
               key: "analytics",
               icon: <BarChartOutlined />,

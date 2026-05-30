@@ -353,6 +353,7 @@ export const payTicket = async (req, res) => {
       ],
 
       metadata: {
+        paymentType: "ticket",
         ticketId: ticket._id.toString(),
       },
 
@@ -426,12 +427,12 @@ export const getTicketById = async (req, res) => {
       },
     });
     if (!ticket) return res.status(404).json({ message: "Ticket not found" });
-    console.log(
-      "Fetched ticket for ID:",
-      ticket.programId.routId.departure,
-      "→",
-      ticket.programId.routId.arrival,
-    );
+    // console.log(
+    //   "Fetched ticket for ID:",
+    //   ticket.programId.routId.departure,
+    //   "→",
+    //   ticket.programId.routId.arrival,
+    // );
 
     res.json({
       passengerName: ticket.passengerName,

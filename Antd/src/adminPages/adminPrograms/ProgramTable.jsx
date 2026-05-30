@@ -294,6 +294,7 @@ export default function ProgramTable() {
           }
         }}
       />
+
       {reserveProgram && (
         <TicketModal
           program={reserveProgram}

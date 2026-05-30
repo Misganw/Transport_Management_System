@@ -8,6 +8,8 @@ import Police from "../models/traficAssignmentModel.js";
 import Report from "../models/reportsModel.js";
 import Ticket from "../models/ticketsModel.js";
 import Program from "../models/programsModel.js";
+import officer from "../models/traficPoliceModel.js";
+import User from "../models/userModel.js";
 import { populate } from "dotenv";
 import { get } from "mongoose";
 
@@ -36,6 +38,25 @@ const list = async (req, res) => {
       qry.userId = user.id;
       // assuming Passenger.userId references the logged-in user
     }
+    if (user.roles === "officer") {
+      // Find all reports assigned to this officer
+      const getUserId = await User.find({
+        _id: user.id,
+      }).select("employeeId");
+      // user_Id = { $in: getUserId.map((a) => a.employeeId) };
+      const getOfficerId = await officer
+        .find({
+          _id: { $in: getUserId.map((a) => a.employeeId) },
+        })
+        .select("_id");
+
+      const getAssignedOfficerId = await Police.find({
+        trafficOfficerId: { $in: getOfficerId.map((a) => a._id) },
+      }).select("_id");
+
+      qry.officerAssignmentId = { $in: getAssignedOfficerId.map((a) => a._id) };
+    }
+
     const rpt = await Report.find({
       ...filter,
       ...qry,
@@ -69,7 +90,8 @@ const list = async (req, res) => {
           },
         ],
       });
-    console.log("Role", rpt[0]?.userId?.roles);
+    // console.log("Role", rpt[0]?.userId?.roles);
+    // console.log("logged in user", user.id);
     res.json(rpt);
   } catch (error) {
     console.log(error);

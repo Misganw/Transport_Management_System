@@ -21,6 +21,7 @@ import { toast } from "react-toastify";
 import "../css/AdminPage.css";
 import "../css/TableCSS.css";
 import TicketTable from "../../adminPages/adminTicket/TicketTable.jsx";
+import PenalityTable from "../../adminPages/voilationReport/PenalityTable.jsx";
 import LeaveLicense from "../../adminPages/adminPrograms/LeaveLicense.jsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -48,7 +49,9 @@ export default function DynamicTable({
   onRestoreMany,
 
   ticketProgramId,
+  penalityReportId,
   onTicketExpandChange,
+  onReportExpandChange,
   canCreate,
   canEdit,
   canDelete,
@@ -396,7 +399,9 @@ export default function DynamicTable({
         expandable={{
           expandedRowKeys: ticketProgramId
             ? [ticketProgramId]
-            : expandedRowKeys,
+            : penalityReportId
+              ? [penalityReportId]
+              : expandedRowKeys,
 
           onExpandedRowsChange: (keys) => {
             setExpandedRowKeys(keys);
@@ -404,6 +409,10 @@ export default function DynamicTable({
             // Notify parent
             if (onTicketExpandChange) {
               onTicketExpandChange(keys);
+            }
+            // Notify parent for penality table
+            if (onReportExpandChange) {
+              onReportExpandChange(keys);
             }
           },
 
@@ -447,6 +456,14 @@ export default function DynamicTable({
               return (
                 <div style={{ padding: 12 }}>
                   <TicketTable programId={record.raw._id} />
+                </div>
+              );
+            }
+            // Penality MODE (NEW)
+            else if (penalityReportId === record.key) {
+              return (
+                <div style={{ padding: 12 }}>
+                  <PenalityTable reportId={record.raw._id} />
                 </div>
               );
             } else {

@@ -13,6 +13,7 @@ const list = async (req, res) => {
     const company = await Company.find({
       _id: user.companyID,
     }).select("_id");
+    // console.log("user Id:", user.id);
     const companyIds = company.map((c) => c._id);
 
     // $regex used to make word pattern match, I used to avoid case sensesitivity.

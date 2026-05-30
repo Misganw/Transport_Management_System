@@ -1,19 +1,31 @@
 import express from "express";
 // Import controller functions
 import {
-  getPenalities,
-  createPenalities,
-  getPenalitiesByID,
-  deletePenalitiesByID,
+  listPenalityByReport,
+  payPenality,
+  cancelPenality,
+  getPenalityById,
 } from "../controllers/penalityAPI.js";
+import { payment_success } from "../success/payment_success.js";
+import stripeWebhook from "../webhooks/stripeWebhook.js";
+import getUserID, { requireRole } from "../middleware/middleware.js";
+
 // Define routes and link to controller functions
 const PenalityRouter = express.Router();
 
-PenalityRouter.get("/", getPenalities);
-// POST /Penalities
-PenalityRouter.post("/", createPenalities);
-// PUT /Penalities/:id
-PenalityRouter.put("/:id", getPenalitiesByID);
-// DELETE /Penalities/:id
-PenalityRouter.delete("/:id", deletePenalitiesByID);
+PenalityRouter.get(
+  "/getPenalityByReport/:reportId",
+  getUserID,
+  listPenalityByReport,
+);
+PenalityRouter.post("/payPenality", payPenality);
+PenalityRouter.delete(
+  "/cancelPenality/:penalityId",
+  getUserID,
+  requireRole("cancel penality", "admin", "manager", "officer"),
+  cancelPenality,
+);
+PenalityRouter.put("/confirm_payment/:penalityId", payment_success);
+PenalityRouter.post("/stripe-webhook", stripeWebhook);
+PenalityRouter.get("/getPaymentInfo/:penalityId", getPenalityById);
 export default PenalityRouter;

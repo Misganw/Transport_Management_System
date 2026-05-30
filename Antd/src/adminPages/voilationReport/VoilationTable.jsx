@@ -30,6 +30,8 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "react-toastify";
 import VoilationForm from "./VoilationForm.jsx";
+import PenalityModal from "./penalityModal.jsx";
+import axios from "axios";
 
 // ....... END OF IMPORTING .......
 
@@ -49,7 +51,7 @@ const columnsViolation = [
   },
   { title: "Reported to", dataIndex: "reportedTo", key: "reportedTo" },
   {
-    title: "Type |Level |Model |Plate",
+    title: "Car Info",
     dataIndex: "carType",
     key: "carType",
     sorter: (a, b) => (a.carType || "").localeCompare(b.carType || ""),
@@ -94,51 +96,71 @@ const columnsViolation = [
 
 export default function VoilationTable() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
-  const [reserveProgram, setReserveProgram] = useState(null);
-  const [ticketProgramId, setTicketProgramId] = useState(null);
-  const { userData } = useContext(AppContext);
-  // const [leaveLicense, setleaveLicense] = useState(null);
 
-  const [printLeaveLicense, setPrintLeaveLicense] = useState(null);
+  // ROLE Filteration for actions
+  const rawRoles = useContext(AppContext)?.userData?.roles;
+  const roles = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+  const hasRole = (...allowedRoles) => {
+    return roles.some((r) => allowedRoles.includes(r));
+  };
+  const canCreate = hasRole("admin", "manager", "coordinator", "passenger");
+  const canEdit = hasRole("admin", "manager", "coordinator", "officer");
+  const canDelete = hasRole("admin", "manager", "coordinator", "officer");
+  const canView = hasRole(
+    "admin",
+    "manager",
+    "coordinator",
+    "officer",
+    "passeneger",
+  );
+  const canRestore = hasRole("admin", "manager", "coordinator", "officer");
+  // ROLE Filteration for actions
+
+  const [penality, setPenality] = useState(null);
+  const [reportId, setReportId] = useState(null);
+  const [penalityReportId, setPenalityReportId] = useState(null);
+  const { userData } = useContext(AppContext);
+
+  const [printPenality, setPrintPenality] = useState(null);
   const [printOpen, setPrintOpen] = useState(false);
 
-  const onTicketClick = (record) => {
-    setTicketProgramId(record.key);
+  const onReportClick = (record) => {
+    setReportId(record.key);
   };
 
-  // ....... Print Leave License ......
-  const onPrintLeaveLicence = (record) => {
-    setPrintLeaveLicense(record);
+  // ....... Print  Penalities ......
+  const onPrintPenality = (record) => {
+    setPrintPenality(record);
     setPrintOpen(true);
   };
 
-  const isProgramDatePassed = (programDate) => {
-    if (!programDate) return true;
-    const today = dayjs().format("YYYY-MM-DD");
-    const programDay = dayjs(programDate).format("YYYY-MM-DD");
+  // const isReportDatePassed = (reportDate) => {
+  //   if (!reportDate) return true;
+  //   const today = dayjs().format("YYYY-MM-DD");
+  //   const reportDay = dayjs(reportDate).format("YYYY-MM-DD");
 
-    return today > programDay; // string comparison works for ISO dates
-  };
+  //   return today > reportDay; // string comparison works for ISO dates
+  // };
   return (
     <>
       <DynamicTable
-        title="Violations Reported"
+        title="Reported Violations"
         resourceName="violations"
         columnsDef={[
           ...columnsViolation,
           {
-            title: "Booking|Printing|Tickets",
-            key: "reserve",
+            title: "Create|Printing|Penalities",
+            key: "penality",
             fixed: "right",
             width: 120,
             render: (_, record) => (
               <Space size="small">
                 <Tooltip
-                  title={
-                    isProgramDatePassed(record.raw.date)
-                      ? "Cannot book: program date has passed"
-                      : "Book Ticket"
-                  }
+                // title={
+                //   isReportDatePassed(record.raw.date)
+                //     ? "Cannot punish: Report date has passed"
+                //     : " Punish"
+                // }
                 >
                   <Button
                     type="link"
@@ -148,19 +170,23 @@ export default function VoilationTable() {
                       fontSize: "12px",
                       height: "12px",
                     }}
-                    disabled={isProgramDatePassed(record.raw.date)}
-                    onClick={() => setReserveProgram(record.raw)}
+                    // disabled={isReportDatePassed(record.raw.date)}
+                    onClick={() => setPenality(record.raw)}
                     icon={<RestOutlined />}
+                    enabled={
+                      userData.roles === "officer" || userData.roles === "admin"
+                    }
+                    // disabled={
+                    //   userData.roles !== "officer" || userData.roles !== "admin"
+                    // }
                   />
                 </Tooltip>
 
                 <Tooltip
                   title={
-                    isProgramDatePassed(record.raw.date) ||
-                    userData.roles !== "admin" ||
-                    userData.roles !== "coordinator"
-                      ? "Cannot print: program date has passed or insufficient permissions"
-                      : "Print Station Leaving License"
+                    userData.roles !== "admin" || userData.roles !== "officer"
+                      ? "Cannot print: report date has passed or insufficient permissions"
+                      : "Print Penality"
                   }
                 >
                   <Button
@@ -173,15 +199,14 @@ export default function VoilationTable() {
                     }}
                     disabled={
                       record.raw.status !== "full" ||
-                      isProgramDatePassed(record.raw.date) ||
                       userData.roles !== "admin" ||
-                      userData.roles !== "coordinator"
+                      userData.roles !== "officer"
                     }
-                    onClick={() => onPrintLeaveLicence(record)}
+                    onClick={() => onPrintPenality(record)}
                     icon={<PrinterOutlined />}
                   />
                 </Tooltip>
-                <Tooltip title="Reserved ticket Lists">
+                <Tooltip title="Recorded penality Lists">
                   <Button
                     type="link"
                     size="small"
@@ -194,7 +219,9 @@ export default function VoilationTable() {
                       record.raw.status === "scheduled" ||
                       record.raw.status === "come inside"
                     }
-                    onClick={() => onTicketClick(record)}
+                    onClick={() => {
+                      setPenalityReportId(record.key);
+                    }}
                     icon={<QrcodeOutlined />}
                   />
                 </Tooltip>
@@ -204,6 +231,11 @@ export default function VoilationTable() {
         ]}
         service={voilationService}
         FormComponent={VoilationForm}
+        canCreate={canCreate}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canView={canView}
+        canRestore={canRestore}
         transformRecord={(r) => ({
           ...r,
           date: r.createdAt
@@ -241,7 +273,7 @@ export default function VoilationTable() {
               {raw.officerAssignmentId?.subrouteId?.subarrival || raw.arrival}
             </div>
             <div>
-              <strong>SubRout:</strong>
+              <strong>Traffic Police:</strong>
               {raw.officerAssignmentId?.trafficOfficerId?.fName} {"|"}
               {raw.officerAssignmentId?.trafficOfficerId?.mName} {"|"}
               {raw.officerAssignmentId?.trafficOfficerId?.lName} {"|"}
@@ -257,7 +289,10 @@ export default function VoilationTable() {
               {raw.ticketId?.programId?.carId?.level ||
                 raw.ticketId?.programId?.carId.level}
             </div>
-
+            <div>
+              <strong>Detail case description: </strong>
+              {raw.CaseDescription || "No additional details provided."}
+            </div>
             <div>
               <strong>Created At:</strong>{" "}
               {new Date(raw.createdAt).toLocaleString()}
@@ -268,7 +303,95 @@ export default function VoilationTable() {
             </div>
           </div>
         )}
+        // ....... to view Penality ......
+        onReportClick={(record) => {
+          setPenalityReportId(record.key);
+        }}
+        penalityReportId={penalityReportId}
+        onReportExpandChange={(keys) => {
+          // If the report row is collapsed, clear penalityReportId
+          if (penalityReportId && !keys.includes(penalityReportId)) {
+            setPenalityReportId(null);
+          }
+        }}
       />
+
+      {penality && (
+        <PenalityModal report={penality} onClose={() => setPenality(null)} />
+      )}
+      {/* Leave License Print Modal */}
+      <Modal
+        open={printOpen}
+        onCancel={() => setPrintOpen(false)}
+        footer={null}
+        width={400}
+      >
+        <LeaveLicense program={printPenality} />
+        <div className="printLicence">
+          {/* Print Button */}
+          <Button
+            type="primary"
+            onClick={() => {
+              document.body.classList.add("printing");
+              window.print();
+              setTimeout(() => {
+                document.body.classList.remove("printing");
+              }, 500);
+            }}
+          >
+            Print
+          </Button>
+
+          {/* Export PDF Button */}
+          <Button
+            type="default"
+            onClick={async () => {
+              if (!printPenality) return;
+
+              const input = document.querySelector(".print-program"); // select the program div
+              if (!input) return;
+
+              try {
+                const canvas = await html2canvas(input, {
+                  scale: 3,
+                  backgroundColor: "#fff",
+                });
+
+                const imgData = canvas.toDataURL("image/png");
+
+                // Create A4 PDF
+                const pdf = new jsPDF("p", "mm", "a4");
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+
+                // === IMPORTANT PART ===
+                // Real receipt width (80mm)
+                const receiptWidth = 80;
+
+                // Keep aspect ratio
+                const receiptHeight =
+                  (canvas.height * receiptWidth) / canvas.width;
+
+                // Center horizontally on A4
+                const x = (pageWidth - receiptWidth) / 2;
+
+                // Small top margin
+                const y = 10;
+
+                // Add image
+                pdf.addImage(imgData, "PNG", x, y, receiptWidth, receiptHeight);
+
+                // Save PDF
+                pdf.save(`Penality_${printPenality._id}.pdf`);
+              } catch (err) {
+                console.error("Failed to export PDF", err);
+              }
+            }}
+          >
+            Export PDF
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }

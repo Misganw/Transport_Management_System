@@ -43,6 +43,7 @@ export default function TicketModal({ program, onClose }) {
             phone: p.phone,
           })),
         );
+        // console.log("Passengers for ticket modal:", res.data);
       } catch (err) {
         toast.error("Error loading passengers");
       }

@@ -1,0 +1,97 @@
+@media print {
+  @page {
+    size: 80mm auto; /* width 80mm, height automatic */
+    margin: 0; /* remove default margins */
+  }
+
+  body {
+    width: 80mm; /* match printer width */
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-ticket {
+    width: 100%;
+    padding: 5px 0; /* smaller padding for thermal printers */
+  }
+
+  .ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .ticket-info p {
+    margin: 2px 0;
+  }
+
+  .ticket-qr img {
+    width: 60px; /* adjust QR code size to fit the receipt */
+    height: 60px;
+  }
+
+  .ticket-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+  }
+
+  .ticket-table td {
+    padding: 2px 5px;
+    border: 1px solid #000;
+  }
+
+  hr {
+    border: 0.5px dashed #000;
+    margin: 5px 0;
+  }
+}
+
+/* @media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-ticket,
+  .print-ticket * {
+    visibility: visible;
+  }
+
+  .print-ticket {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+  }
+
+  .ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .ticket-info p {
+    margin: 2px 0;
+  }
+
+  .ticket-qr img {
+    display: block;
+  }
+
+  .ticket-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  .ticket-table td {
+    padding: 5px 10px;
+    border: 1px solid #000;
+  }
+} */

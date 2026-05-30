@@ -93,11 +93,11 @@ export default function ProgramForm({
       initialValues: "Not assigned",
       props: {
         options: [
-          { label: "Firtst round", value: "1rst" },
+          { label: "First round", value: "1rst" },
           { label: "Second round", value: "2nd" },
           { label: "Third Round", value: "3rd" },
           { label: "Fourth Round", value: "4rth" },
-          { label: "Fivth Round", value: "5th" },
+          { label: "Fifth Round", value: "5th" },
           { label: "Sixth round", value: "6th" },
           { label: "Seventh round", value: "7th" },
           { label: "Eighth round", value: "8th" },

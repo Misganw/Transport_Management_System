@@ -130,6 +130,11 @@ export default function UsersTable() {
       FormComponent={UserForm}
       TPFormComponent={TPUserForm}
       hideAddTP
+      canCreate={canCreate}
+      canEdit={canEdit}
+      canDelete={canDelete}
+      canView={canView}
+      canRestore={canRestore}
       transformRecord={(r) => ({
         ...r,
         fullName: `${r.fName || ""} | ${r.mName || ""} | ${

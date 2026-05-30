@@ -11,4 +11,9 @@ const ReportRouter = express.Router();
 
 ReportRouter.get("/", getUserID, getTicketId);
 ReportRouter.get("/:ticketId", getUserID, getAssignedPoliceByTicket);
+ReportRouter.get(
+  "/assigned-police/:ticketId",
+  getUserID,
+  getAssignedPoliceByTicket,
+);
 export default ReportRouter;

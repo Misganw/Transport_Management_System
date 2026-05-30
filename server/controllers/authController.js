@@ -73,7 +73,7 @@ export const userRegistor = async (req, res) => {
         gender,
         email,
         phone: "", // if you have phone in req.body, fill it
-        GID: fydano, // or generate a unique GID if needed
+        RID: fydano, // or generate a unique RID if needed
       });
     }
 
