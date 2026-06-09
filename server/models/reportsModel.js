@@ -31,8 +31,8 @@ const reportSchema = new mongoose.Schema(
     CaseDescription: { type: String },
     Status: {
       type: String,
-      enum: ["opened", "pending", "action"],
-      default: "opened",
+      enum: ["claimed", "opened", "punished", "completed"],
+      default: "claimed",
     },
   },
   { timestamps: true },

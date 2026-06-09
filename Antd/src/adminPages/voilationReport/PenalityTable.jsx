@@ -1,5 +1,18 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Table, Tag, Space, Button, Tooltip, Popconfirm, Modal } from "antd";
+import {
+  Table,
+  Tag,
+  Space,
+  Button,
+  Tooltip,
+  Popconfirm,
+  Modal,
+  ConfigProvider,
+  Select,
+  Row,
+  Col,
+  Card,
+} from "antd";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { toast } from "react-toastify";
@@ -18,6 +31,14 @@ import PrintablePenality from "./PrintablePenality.jsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { AppContext } from "../../context/AppContext.jsx";
+
+import telebirr from "../../assets/paymentImage/telebirr.png";
+import chapa from "../../assets/paymentImage/chap.png";
+import cbebirr from "../../assets/paymentImage/cbebirr.jpg";
+import stripe from "../../assets/paymentImage/stripe.png";
+import mpesa from "../../assets/paymentImage/mpesa.png";
+import mastercard from "../../assets/paymentImage/mastercard.png";
+import paypal from "../../assets/paymentImage/paypal.png";
 // ..... end of import .....
 
 dayjs.extend(duration);
@@ -29,6 +50,17 @@ export default function PenalityTable({ reportId }) {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [printPenality, setPrintPenality] = useState(null);
   const [printOpen, setPrintOpen] = useState(false);
+
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPenalityId, setSelectedPenalityId] = useState(null);
+  const [provider, setProvider] = useState(null);
+
+  /* ---------------- Pay Modal  ---------------- */
+  const openPaymentModal = (penalityId) => {
+    setSelectedPenalityId(penalityId);
+    setProvider(null);
+    setPaymentModalOpen(true);
+  };
 
   /* ---------------- FETCH Penality ---------------- */
   const fetchPenality = async () => {
@@ -111,10 +143,14 @@ export default function PenalityTable({ reportId }) {
   };
 
   /* ---------------- PAYMENT ACTIONS ---------------- */
-  const payPenality = async (penalityId) => {
+  const payPenality = async (penalityId, provider) => {
     try {
-      const res = await axios.post(`${backendURL}/payPenality`, { penalityId });
-      window.location.href = res.data.url; // Redirect to Stripe
+      const res = await axios.post(`${backendURL}/payPenality`, {
+        penalityId,
+        provider,
+      });
+      // window.location.href = res.data.url; // Redirect to Stripe
+      window.open(res.data.url, "_blank", "noopener,noreferrer");
     } catch (err) {
       toast.error(err.response?.data?.message || "Payment failed");
     }
@@ -187,7 +223,8 @@ export default function PenalityTable({ reportId }) {
                   fontSize: "12px",
                   height: "12px",
                 }}
-                onClick={() => payPenality(record._id)}
+                // onClick={() => payPenality(record._id)}
+                onClick={() => openPaymentModal(record._id)}
               />
             </Tooltip>
           )}
@@ -242,6 +279,44 @@ export default function PenalityTable({ reportId }) {
           )}
         </Space>
       ),
+    },
+  ];
+
+  const paymentMethods = [
+    {
+      key: "stripe",
+      name: "Stripe",
+      logo: stripe,
+    },
+    {
+      key: "chapa",
+      name: "CHAPA",
+      logo: chapa,
+    },
+    {
+      key: "telebirr",
+      name: "Telebirr",
+      logo: telebirr,
+    },
+    {
+      key: "cbebirr",
+      name: "CBE Birr",
+      logo: cbebirr,
+    },
+    {
+      key: "mpesa",
+      name: "M-PESA",
+      logo: mpesa,
+    },
+    {
+      key: "mastercard",
+      name: "Master Card",
+      logo: mastercard,
+    },
+    {
+      key: "paypal",
+      name: "PayPal",
+      logo: paypal,
     },
   ];
 
@@ -323,6 +398,55 @@ export default function PenalityTable({ reportId }) {
             Export PDF
           </Button>
         </div>
+      </Modal>
+
+      <Modal
+        title="Choose Payment Method"
+        open={paymentModalOpen}
+        onCancel={() => setPaymentModalOpen(false)}
+        footer={null}
+      >
+        <Row gutter={[16, 16]}>
+          {paymentMethods.map((method) => (
+            <Col span={12} key={method.key}>
+              <Card
+                hoverable
+                onClick={() => payPenality(selectedPenalityId, method.key)}
+                style={{
+                  textAlign: "center",
+                  cursor: "pointer",
+
+                  border:
+                    provider === method.key
+                      ? "2px solid #1677ff"
+                      : "1px solid #d9d9d9",
+                }}
+              >
+                <img
+                  src={method.logo}
+                  alt={method.name}
+                  style={{
+                    height: 50,
+                    objectFit: "contain",
+                    marginBottom: 10,
+                  }}
+                />
+
+                <div>{method.name}</div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+
+        {/* <Button
+                type="primary"
+                block
+                style={{ marginTop: 20 }}
+                disabled={!provider}
+                onClick={payTicket}
+              >
+                Proceed To Payment
+              </Button> */}
       </Modal>
     </>
   );

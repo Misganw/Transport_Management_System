@@ -6,6 +6,7 @@ import CancelledTicket from "../models/cancelledTicketModel.js";
 import Company from "../models/companyModel.js";
 import Stripe from "stripe";
 import { formatDateOnly } from "../util/dayUtility.js";
+import axios from "axios";
 
 // Helper to generate reservation code
 function generateReservationCode() {
@@ -296,24 +297,158 @@ export const cancelTicket = async (req, res) => {
 };
 
 /** .......Pay ticket.........*/
+// export const payTicket = async (req, res) => {
+//   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+//   try {
+//     const { ticketId } = req.body;
+
+//     // Fetch ticket from DB
+//     const ticket = await Ticket.findById(ticketId)
+//       .populate({
+//         path: "programId",
+//         populate: { path: "routId", select: "departure arrival" },
+//       })
+//       .populate("reservationCode");
+
+//     if (!ticket) {
+//       return res.status(404).json({ message: "Ticket not found" });
+//     }
+
+//     if (ticket.paymentStatus === "paid") {
+//       return res.status(400).json({ message: "Ticket already paid" });
+//     }
+
+//     if (ticket.paymentStatus === "canceled") {
+//       return res.status(400).json({ message: "Ticket is canceled" });
+//     }
+
+//     // Mark ticket as PENDING
+//     // ticket.paymentStatus = "pending";
+//     // await ticket.save();
+
+//     // Safely get ticket amount in cents
+//     const amountCents = Math.round(Number(ticket.programId.tarrif) * 100);
+
+//     if (isNaN(amountCents) || amountCents <= 0) {
+//       return res.status(400).json({ message: "Invalid ticket tariff" });
+//     }
+//     // Create Stripe Checkout Session
+//     const session = await stripe.checkout.sessions.create({
+//       payment_method_types: ["card"],
+//       mode: "payment",
+
+//       // Product details shown in Stripe UI
+//       line_items: [
+//         {
+//           price_data: {
+//             currency: "usd",
+//             product_data: {
+//               name: "Care Ticket Reservation",
+//               description: `Route: ${ticket.programId.routId.departure} to ${ticket.programId.routId.arrival}, Seat: ${ticket.seatNumber}, Reservation Code: ${ticket.reservationCode}`,
+//             },
+//             unit_amount: amountCents, // Stripe expects cents
+//           },
+//           quantity: 1,
+//         },
+//       ],
+
+//       metadata: {
+//         paymentType: "ticket",
+//         ticketId: ticket._id.toString(),
+//       },
+
+//       // Redirect URLs after payment
+//       success_url: `${process.env.VITE_FRONTEND_URL}/payment_success?ticketId=${ticket._id}`,
+//       cancel_url: `${process.env.VITE_FRONTEND_URL}/payment_cancel`,
+//     });
+
+//     // Send Stripe URL to frontend
+//     res.json({ url: session.url });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(400).json({ message: err.message || "Payment session failed" });
+//   }
+// };
+
+// ........ Dynamic Payment ......
+
 export const payTicket = async (req, res) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
   try {
-    const { ticketId } = req.body;
-
-    // Fetch ticket from DB
+    const { ticketId, provider } = req.body; // frontend selects provider
     const ticket = await Ticket.findById(ticketId)
       .populate({
         path: "programId",
         populate: { path: "routId", select: "departure arrival" },
       })
       .populate("reservationCode");
+    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
 
-    if (!ticket) {
-      return res.status(404).json({ message: "Ticket not found" });
+    // ticket.paymentStatus = "pending";
+    // await ticket.save();
+
+    // switch (provider?.toLowerCase()) {
+    //   case "stripe":
+    //     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    //     const session = await stripe.checkout.sessions.create({
+    //       payment_method_types: ["card"],
+    //       mode: "payment",
+    //       line_items: [
+    //         {
+    //           price_data: {
+    //             currency: "usd",
+    //             product_data: {
+    //               name: "Bus Ticket Reservation",
+    //               description: `Seat ${ticket.seatNumber}, Reservation Code: ${ticket.reservationCode}`,
+    //             },
+    //             unit_amount: Math.round(ticket.programId.tarrif * 100),
+    //           },
+    //           quantity: 1,
+    //         },
+    //       ],
+    //       metadata: { ticketId: ticket._id.toString() },
+    //       success_url: `${process.env.VITE_FRONTEND_URL}/payment_success?ticketId=${ticket._id}`,
+    //       cancel_url: `${process.env.VITE_FRONTEND_URL}/payment_cancel`,
+    //     });
+    //     return res.json({ url: session.url });
+
+    //   case "paypal":
+    //     // Call PayPal API to create order
+    //     return res.json({ message: "PayPal integration here" });
+
+    //   case "flutterwave":
+    //     // Call Flutterwave API to create payment link
+    //     return res.json({ message: "Flutterwave integration here" });
+
+    //   default:
+    //     return res.status(400).json({ message: "Unsupported payment provider" });
+    // }
+    switch (provider?.toLowerCase()) {
+      case "stripe":
+        return await createStripePayment(ticket, res);
+
+      case "chapa":
+        return await createChapaPayment(ticket, res);
+
+      default:
+        return res.status(400).json({
+          message: "Unsupported payment provider",
+        });
     }
+  } catch (err) {
+    console.error(err);
 
+    return res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+/* ..... Stripe payment function ....*/
+const createStripePayment = async (ticket, res) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+  try {
     if (ticket.paymentStatus === "paid") {
       return res.status(400).json({ message: "Ticket already paid" });
     }
@@ -321,11 +456,6 @@ export const payTicket = async (req, res) => {
     if (ticket.paymentStatus === "canceled") {
       return res.status(400).json({ message: "Ticket is canceled" });
     }
-
-    // Mark ticket as PENDING
-    // ticket.paymentStatus = "pending";
-    // await ticket.save();
-
     // Safely get ticket amount in cents
     const amountCents = Math.round(Number(ticket.programId.tarrif) * 100);
 
@@ -343,7 +473,7 @@ export const payTicket = async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "Care Ticket Reservation",
+              name: "Car Ticket Reservation",
               description: `Route: ${ticket.programId.routId.departure} to ${ticket.programId.routId.arrival}, Seat: ${ticket.seatNumber}, Reservation Code: ${ticket.reservationCode}`,
             },
             unit_amount: amountCents, // Stripe expects cents
@@ -368,56 +498,59 @@ export const payTicket = async (req, res) => {
     console.log(err);
     res.status(400).json({ message: err.message || "Payment session failed" });
   }
-};
+}; /* ..... Stripe payment function ....*/
 
-// ........ Dynamic Payment ......
-// export const dynamicPayTicket = async (req, res) => {
-//   const { ticketId, provider } = req.body; // frontend selects provider
-//   const ticket = await Ticket.findById(ticketId).populate("programId");
-//   if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+/* ..... Chapa payment function ....*/
+const createChapaPayment = async (ticket, res) => {
+  try {
+    const tx_ref = `ticket_${ticket._id}_${Date.now()}`;
 
-//   ticket.paymentStatus = "pending";
-//   await ticket.save();
+    const response = await axios.post(
+      process.env.CHAPA_BASE_URL,
+      {
+        amount: ticket.programId.tarrif,
+        currency: "ETB",
 
-//   switch (provider.toLowerCase()) {
-//     case "stripe":
-//       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-//       const session = await stripe.checkout.sessions.create({
-//         payment_method_types: ["card"],
-//         mode: "payment",
-//         line_items: [
-//           {
-//             price_data: {
-//               currency: "usd",
-//               product_data: {
-//                 name: "Bus Ticket Reservation",
-//                 description: `Seat ${ticket.seatNumber}, Reservation Code: ${ticket.reservationCode}`,
-//               },
-//               unit_amount: Math.round(ticket.programId.tarrif * 100),
-//             },
-//             quantity: 1,
-//           },
-//         ],
-//         metadata: { ticketId: ticket._id.toString() },
-//         success_url: `${process.env.VITE_FRONTEND_URL}/payment_success?ticketId=${ticket._id}`,
-//         cancel_url: `${process.env.VITE_FRONTEND_URL}/payment_cancel`,
-//       });
-//       return res.json({ url: session.url });
+        email: ticket.email,
+        first_name: ticket.passengerName,
 
-//     case "paypal":
-//       // Call PayPal API to create order
-//       return res.json({ message: "PayPal integration here" });
+        tx_ref,
 
-//     case "flutterwave":
-//       // Call Flutterwave API to create payment link
-//       return res.json({ message: "Flutterwave integration here" });
+        callback_url: `${process.env.VITE_BACKEND_URL}/webhook/chapa`,
 
-//     default:
-//       return res.status(400).json({ message: "Unsupported payment provider" });
-//   }
-// };
+        return_url: `${process.env.VITE_FRONTEND_URL}/payment_success?ticketId=${ticket._id}`,
+
+        customization: {
+          title: "Ticket Payment",
+          description: "Ticket Reservation Payment",
+        },
+
+        meta: {
+          ticketId: ticket._id.toString(),
+          paymentType: "ticket",
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+        },
+      },
+    );
+
+    return res.json({
+      url: response.data.data.checkout_url,
+    });
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+
+    return res.status(500).json({
+      message: "Chapa payment failed",
+    });
+  }
+}; /* ..... Chapa payment function ....*/
 
 // ..... Get Payment info from payment success page ....
+
 export const getTicketById = async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.ticketId).populate({

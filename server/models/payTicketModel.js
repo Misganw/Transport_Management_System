@@ -1,39 +1,68 @@
 import mongoose from "mongoose";
-const penalitySchema = new mongoose.Schema(
+
+const paymentSchema = new mongoose.Schema(
   {
     companyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Companies",
-      required: true,
     },
+
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",
-      required: true,
     },
+
     ticketId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "tickets",
-      required: true,
     },
+
     amount: {
       type: Number,
       required: true,
     },
+
+    currency: {
+      type: String,
+      default: "usd",
+    },
+
     paymentDate: {
       type: Date,
-      required: true,
+      default: Date.now,
     },
+
     paymentMethod: {
       type: String,
-      required: true,
+      default: "stripe",
     },
+
     referenceNumber: {
+      type: String, // Stripe Payment Intent ID
+    },
+
+    customerName: {
       type: String,
-      required: false,
+    },
+
+    customerEmail: {
+      type: String,
+    },
+
+    customerPhone: {
+      type: String,
+    },
+
+    status: {
+      type: String,
+      default: "paid",
+    },
+
+    rawResponse: {
+      type: Object,
     },
   },
-
   { timestamps: true },
 );
-export default mongoose.model("payments", penalitySchema);
+
+export default mongoose.model("ticketPayments", paymentSchema);

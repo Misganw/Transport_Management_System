@@ -10,6 +10,7 @@ import Ticket from "../models/ticketsModel.js";
 import Program from "../models/programsModel.js";
 import officer from "../models/traficPoliceModel.js";
 import User from "../models/userModel.js";
+import Notification from "../models/reportNotificationModel.js";
 import { populate } from "dotenv";
 import { get } from "mongoose";
 
@@ -140,6 +141,23 @@ const create = async (req, res) => {
       userId: user.id || user._id,
     };
     const stt = await Report.create(payload);
+
+    // officer assigned to this report
+    const assignment = await Police.findById(stt.officerAssignmentId);
+    const officerId = assignment?.trafficOfficerId;
+
+    if (officerId) {
+      await Notification.create({
+        companyId: user.companyID,
+        userId: user.id || user._id,
+        officerId: officerId,
+        reportId: stt._id,
+        title: "New Violation Report",
+        message: "A new violation report has been assigned to you",
+        isRead: false,
+      });
+    }
+
     res.json(stt);
   } catch (error) {
     console.error("Error creating Report:", error);

@@ -35,6 +35,13 @@ import { AppContext } from "../../context/AppContext.jsx";
 // const service = makeService("employees");
 const columnsProgram = [
   {
+    title: "Date",
+    dataIndex: "date",
+    key: "date",
+    render: (date) => (date ? dayjs(date).format("YYYY-MM-DD") : "No Date"),
+    sorter: (a, b) => a.date - b.date,
+  },
+  {
     title: "Route",
     dataIndex: "rout",
     key: "rout",
@@ -85,13 +92,6 @@ const columnsProgram = [
         </Tag>
       );
     },
-  },
-  {
-    title: "Date",
-    dataIndex: "date",
-    key: "date",
-    render: (date) => (date ? dayjs(date).format("YYYY-MM-DD") : "No Date"),
-    sorter: (a, b) => a.date - b.date,
   },
 ];
 

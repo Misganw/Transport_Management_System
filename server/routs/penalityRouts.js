@@ -8,6 +8,8 @@ import {
 } from "../controllers/penalityAPI.js";
 import { payment_success } from "../success/payment_success.js";
 import stripeWebhook from "../webhooks/stripeWebhook.js";
+import chapaWebhook from "../webhooks/chapaWebhook.js";
+
 import getUserID, { requireRole } from "../middleware/middleware.js";
 
 // Define routes and link to controller functions
@@ -27,5 +29,6 @@ PenalityRouter.delete(
 );
 PenalityRouter.put("/confirm_payment/:penalityId", payment_success);
 PenalityRouter.post("/stripe-webhook", stripeWebhook);
+// PenalityRouter.post("/webhook/chapa", chapaWebhook);
 PenalityRouter.get("/getPaymentInfo/:penalityId", getPenalityById);
 export default PenalityRouter;

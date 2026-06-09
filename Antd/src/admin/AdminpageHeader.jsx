@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import profile from "../assets/images/cat.jpg";
 import { AppContext } from "../context/AppContext";
 import {
@@ -11,11 +11,16 @@ import {
   Select,
   Avatar,
   Button,
+  Popover,
+  Badge,
+  List,
+  notification,
 } from "antd";
-import { MenuOutlined, CloseOutlined } from "@ant-design/icons";
+import { MenuOutlined, CloseOutlined, BellOutlined } from "@ant-design/icons";
 import Logo from "../assets/etlogo.jpg";
 import "./css/AdminPage.css";
 import ChangePasswordModal from "../verify/ChangePasswordModal";
+import axios from "axios";
 const { Header, Sider, Content, Footer } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -29,6 +34,74 @@ function AdminpageHeader(props) {
 
   const openModal = () => setOpenModal(true);
   const closeModal = () => setOpenModal(false);
+
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
+  const [notifications, setNotifications] = useState([]);
+  const [previousCount, setPreviousCount] = useState(0);
+
+  useEffect(() => {
+    if (userData?.roles !== "officer") return;
+
+    fetchNotifications();
+
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 10000); // every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [userData]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios.get(`${backendURL}/notifications/unread`);
+      const newNotifications = res.data;
+
+      if (previousCount > 0 && newNotifications.length > previousCount) {
+        const latest = newNotifications[0];
+
+        notification.info({
+          message: latest.title,
+          description: latest.message,
+          placement: "topRight",
+          duration: 5,
+        });
+      }
+
+      setPreviousCount(newNotifications.length);
+      setNotifications(newNotifications);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const openNotification = async (notificationId, reportId) => {
+    try {
+      await axios.put(`${backendURL}/notifications/open/${notificationId}`);
+      setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
+
+      // Optional:
+      // navigate(`/reports/${reportId}`);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const notificationContent = (
+    <div style={{ width: 320 }}>
+      <List
+        dataSource={notifications}
+        locale={{ emptyText: "No new notifications" }}
+        renderItem={(item) => (
+          <List.Item
+            style={{ cursor: "pointer" }}
+            onClick={() => openNotification(item._id, item.reportId)}
+          >
+            <List.Item.Meta title={item.title} description={item.message} />
+          </List.Item>
+        )}
+      />
+    </div>
+  );
   return (
     <div>
       <Header className="admin-header">
@@ -53,7 +126,35 @@ function AdminpageHeader(props) {
                 : "Admin Dashboard"}
             </Title>
           </div>
-          <div className="right">
+
+          <div
+            className="right"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "15px",
+            }}
+          >
+            {/* Notification Bell */}
+            {userData?.roles === "officer" && (
+              <Popover
+                content={notificationContent}
+                title="Notifications"
+                trigger="click"
+                placement="bottomRight"
+              >
+                <Badge count={notifications.length} size="small">
+                  <BellOutlined
+                    style={{
+                      fontSize: "24px",
+                      cursor: "pointer",
+                    }}
+                  />
+                </Badge>
+              </Popover>
+            )}
+            {/* Profile drop down */}
+
             <Dropdown
               trigger={["click"]}
               placement="bottomRight"

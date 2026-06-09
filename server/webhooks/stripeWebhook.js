@@ -1,6 +1,9 @@
 import Stripe from "stripe";
 import Ticket from "../models/ticketsModel.js";
 import Penality from "../models/penalityModel.js";
+import TicketPayment from "../models/payTicketModel.js";
+import PenalityPayment from "../models/paymentsModel.js";
+import Report from "../models/reportsModel.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -49,6 +52,29 @@ const stripeWebhook = async (req, res) => {
         ticket.paidAt = new Date();
         await ticket.save();
       }
+      await TicketPayment.create({
+        companyId: ticket.companyId,
+        userId: ticket.userId,
+        ticketId: ticket._id,
+        amount: session.amount_total / 100,
+        currency: session.currency,
+
+        paymentDate: session.paidAt,
+
+        paymentMethod: "stripe",
+
+        referenceNumber: session.payment_intent,
+
+        customerName: session.customer_details?.name || ticket.passengerName,
+
+        customerEmail: session.customer_details?.email || ticket.email,
+
+        customerPhone: session.customer_details?.phone || "",
+
+        status: "paid",
+
+        rawResponse: session,
+      });
     }
     // =========================
     // PENALITY PAYMENT
@@ -82,7 +108,34 @@ const stripeWebhook = async (req, res) => {
         penality.paidAt = new Date();
 
         await penality.save();
+
+        await Report.findByIdAndUpdate(penality.reportId, {
+          Status: "paid",
+        });
       }
+      await PenalityPayment.create({
+        companyId: penality.companyId,
+        userId: penality.userId,
+        penalityId: penality._id,
+        amount: session.amount_total / 100,
+        currency: session.currency,
+
+        paymentDate: session.paidAt,
+
+        paymentMethod: "stripe",
+
+        referenceNumber: session.payment_intent,
+
+        customerName: session.customer_details?.name,
+
+        customerEmail: session.customer_details?.email,
+
+        customerPhone: session.customer_details?.phone || "",
+
+        status: "paid",
+
+        rawResponse: session,
+      });
     }
   }
 

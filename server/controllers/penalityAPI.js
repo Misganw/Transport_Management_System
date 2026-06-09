@@ -4,6 +4,7 @@ import Company from "../models/companyModel.js";
 import Report from "../models/reportsModel.js";
 import Stripe from "stripe";
 import { populate } from "dotenv";
+import axios from "axios";
 
 // Helper to generate reservation code
 function payment_Code() {
@@ -59,7 +60,12 @@ const create = async (req, res) => {
       userId: user.id || user._id,
       paymentCode: payment_Code(),
     };
+
     const createPenality = await Penality.create(payload);
+
+    await Report.findByIdAndUpdate(payload.reportId, {
+      Status: "punished",
+    });
     res.json(createPenality);
   } catch (error) {
     res.status(500).json({ message: "Error creating Penality" });
@@ -214,12 +220,102 @@ export const listPenalityByReport = async (req, res) => {
 };
 
 /** .......Pay Penality.........*/
+// export const payPenality = async (req, res) => {
+//   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+//   try {
+//     const { penalityId } = req.body;
+
+//     // Fetch Penality from DB
+//     const penality = await Penality.findById(penalityId)
+//       .populate({ path: "companyId", select: "companyName" })
+//       .populate({ path: "userId", select: "name" }) // the person who punished the penality
+//       .populate({
+//         path: "reportId",
+//         populate: [
+//           {
+//             path: "officerAssignmentId",
+//             populate: [
+//               { path: "trafficOfficerId", select: "fName mName lName" },
+//               { path: "subrouteId", select: "subdeparture subarrival" },
+//             ],
+//           },
+//           {
+//             path: "ticketId",
+//             populate: {
+//               path: "programId",
+//               populate: {
+//                 path: "carId",
+//                 select: "type model level plateNumber",
+//               },
+//             },
+//           },
+//         ],
+//       });
+
+//     if (!penality) {
+//       return res.status(404).json({ message: "Penality not found" });
+//     }
+
+//     if (penality.status === "paid") {
+//       return res.status(400).json({ message: "Penality already paid" });
+//     }
+
+//     if (penality.status === "canceled") {
+//       return res.status(400).json({ message: "Penality is canceled" });
+//     }
+
+//     // Mark penality as PENDING
+//     // penality.paymentStatus = "pending";
+//     // await penality.save();
+
+//     // Safely get penality amount in cents
+//     const amountCents = Math.round(Number(penality.amount) * 100);
+
+//     if (isNaN(amountCents) || amountCents <= 0) {
+//       return res.status(400).json({ message: "Invalid penality tariff" });
+//     }
+//     // Create Stripe Checkout Session
+//     const session = await stripe.checkout.sessions.create({
+//       payment_method_types: ["card"],
+//       mode: "payment",
+
+//       // Product details shown in Stripe UI
+//       line_items: [
+//         {
+//           price_data: {
+//             currency: "usd",
+//             product_data: {
+//               name: "Penality Payment",
+//               description: `Route: ${penality.reportId.officerAssignmentId.subrouteId.subdeparture} to ${penality.reportId.officerAssignmentId.subrouteId.subarrival}, Car Info: ${penality.reportId?.ticketId?.programId?.carId ? `${penality.reportId.ticketId.programId.carId.type} ${penality.reportId.ticketId.programId.carId.model}` : "N/A"}, Penality Code: ${penality.paymentCode}`,
+//             },
+//             unit_amount: amountCents, // Stripe expects cents
+//           },
+//           quantity: 1,
+//         },
+//       ],
+
+//       metadata: {
+//         paymentType: "penality",
+//         penalityId: penality._id.toString(),
+//       },
+
+//       // Redirect URLs after payment
+//       success_url: `${process.env.VITE_FRONTEND_URL}/payment_success?penalityId=${penality._id}`,
+//       cancel_url: `${process.env.VITE_FRONTEND_URL}/payment_cancel`,
+//     });
+
+//     // Send Stripe URL to frontend
+//     res.json({ url: session.url });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(400).json({ message: err.message || "Payment session failed" });
+//   }
+// };
+
 export const payPenality = async (req, res) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
   try {
-    const { penalityId } = req.body;
-
+    const { penalityId, provider } = req.body; // frontend selects provider
     // Fetch Penality from DB
     const penality = await Penality.findById(penalityId)
       .populate({ path: "companyId", select: "companyName" })
@@ -247,10 +343,35 @@ export const payPenality = async (req, res) => {
         ],
       });
 
-    if (!penality) {
+    if (!penality)
       return res.status(404).json({ message: "Penality not found" });
-    }
 
+    switch (provider?.toLowerCase()) {
+      case "stripe":
+        return await createStripePayment(penality, res);
+
+      case "chapa":
+        return await createChapaPayment(penality, res);
+
+      default:
+        return res.status(400).json({
+          message: "Unsupported payment provider",
+        });
+    }
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+/* ..... Stripe payment function ....*/
+const createStripePayment = async (penality, res) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+  try {
     if (penality.status === "paid") {
       return res.status(400).json({ message: "Penality already paid" });
     }
@@ -258,11 +379,6 @@ export const payPenality = async (req, res) => {
     if (penality.status === "canceled") {
       return res.status(400).json({ message: "Penality is canceled" });
     }
-
-    // Mark penality as PENDING
-    // penality.paymentStatus = "pending";
-    // await penality.save();
-
     // Safely get penality amount in cents
     const amountCents = Math.round(Number(penality.amount) * 100);
 
@@ -280,7 +396,7 @@ export const payPenality = async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "Penality Payment",
+              name: "Penality",
               description: `Route: ${penality.reportId.officerAssignmentId.subrouteId.subdeparture} to ${penality.reportId.officerAssignmentId.subrouteId.subarrival}, Car Info: ${penality.reportId?.ticketId?.programId?.carId ? `${penality.reportId.ticketId.programId.carId.type} ${penality.reportId.ticketId.programId.carId.model}` : "N/A"}, Penality Code: ${penality.paymentCode}`,
             },
             unit_amount: amountCents, // Stripe expects cents
@@ -305,7 +421,56 @@ export const payPenality = async (req, res) => {
     console.log(err);
     res.status(400).json({ message: err.message || "Payment session failed" });
   }
-};
+}; /* ..... Stripe payment function ....*/
+
+/* ..... Chapa payment function ....*/
+const createChapaPayment = async (penality, res) => {
+  try {
+    const tx_ref = `penality_${penality._id}_${Date.now()}`;
+
+    const payload = {
+      amount: penality.amount,
+      currency: "ETB",
+
+      email: penality.email,
+      first_name: penality.passengerName,
+
+      tx_ref,
+
+      callback_url: `${process.env.CHAPA_GROK_URL}/webhook/chapa`,
+
+      return_url: `${process.env.VITE_FRONTEND_URL}/payment_success?penalityId=${penality._id}`,
+
+      customization: {
+        title: "Penality Payment",
+        description: "Penality Payment",
+      },
+
+      meta: {
+        penalityId: penality._id.toString(),
+        paymentType: "penality",
+      },
+    };
+
+    const response = await axios.post(process.env.CHAPA_BASE_URL, payload, {
+      headers: {
+        Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const chapaData = response.data;
+    console.log("Chapa payment response:", chapaData);
+    return res.json({
+      url: chapaData.data.checkout_url,
+    });
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+
+    return res.status(500).json({
+      message: "Chapa payment failed",
+    });
+  }
+}; /* ..... Chapa payment function ....*/
 
 /** ..........Cancel Penality.........*/
 export const cancelPenality = async (req, res) => {

@@ -15,6 +15,12 @@ import {
   BarcodeOutlined,
   QrcodeOutlined,
   DeleteOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  UndoOutlined,
+  RedoOutlined,
+  PlusCircleOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
@@ -37,6 +43,12 @@ import axios from "axios";
 
 // const service = makeService("employees");
 const columnsViolation = [
+  {
+    title: "Reported Date",
+    dataIndex: "date",
+    key: "date",
+    sorter: (a, b) => a.date - b.date,
+  },
   {
     title: "Route",
     dataIndex: "rout",
@@ -69,21 +81,16 @@ const columnsViolation = [
     sorter: (a, b) => a.voilated - b.voilated,
   },
   {
-    title: "Reported Date",
-    dataIndex: "date",
-    key: "date",
-    sorter: (a, b) => a.date - b.date,
-  },
-  {
     title: "Status",
     dataIndex: "status",
     key: "status",
     sorter: (a, b) => (a.status || "").localeCompare(b.status || ""),
     render: (status) => {
       const statusColors = {
-        opened: "green",
-        pending: "red",
-        action: "darkgreen",
+        claimed: "red",
+        opened: "yellow",
+        Punished: "green",
+        paid: "darkgreen",
       };
       return (
         <Tag bordered={false} color={statusColors[status] || "default"}>
@@ -172,13 +179,11 @@ export default function VoilationTable() {
                     }}
                     // disabled={isReportDatePassed(record.raw.date)}
                     onClick={() => setPenality(record.raw)}
-                    icon={<RestOutlined />}
+                    icon={<PlusOutlined />}
                     enabled={
                       userData.roles === "officer" || userData.roles === "admin"
                     }
-                    // disabled={
-                    //   userData.roles !== "officer" || userData.roles !== "admin"
-                    // }
+                    disabled={userData.roles !== "officer"}
                   />
                 </Tooltip>
 
@@ -222,7 +227,7 @@ export default function VoilationTable() {
                     onClick={() => {
                       setPenalityReportId(record.key);
                     }}
-                    icon={<QrcodeOutlined />}
+                    icon={<EyeOutlined />}
                   />
                 </Tooltip>
               </Space>

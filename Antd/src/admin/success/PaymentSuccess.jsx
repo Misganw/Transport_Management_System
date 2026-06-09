@@ -69,32 +69,6 @@ export default function PaymentSuccess() {
     fetchPaymentInfo();
   }, [ticketId, penalityId]);
 
-  // useEffect(() => {
-  //   if (!ticketId) {
-  //     setError("Ticket ID not found in URL");
-  //     setLoading(false);
-  //     return;
-  //   }
-
-  //   const fetchTicket = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${backendURL}/getPymentInfo/${ticketId}`,
-  //       );
-  //       setTicket(response.data);
-  //     } catch (err) {
-  //       console.error("Failed to fetch ticket details:", err);
-  //       setError(
-  //         err.response?.data?.message || "Failed to fetch ticket details",
-  //       );
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchTicket();
-  // }, [ticketId]);
-
   if (loading) return <Spin tip="Loading payment details..." />;
 
   if (error) return <Result status="error" title="Error" subTitle={error} />;

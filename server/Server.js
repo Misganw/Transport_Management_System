@@ -29,6 +29,7 @@ import SubroutRouter from "./routs/subRoutRouts.js";
 import TrafficAssignmentRouter from "./routs/trafficPoliceAssignmentRouts.js";
 import ReportRouter from "./routs/reportRouts.js";
 import RenalityRouter from "./routs/penalityRouts.js";
+import reportNotification from "./routs/reportNotificationRout.js";
 
 //......import Rout.....
 
@@ -59,6 +60,7 @@ import userAPI from "./controllers/userAPI.js";
 import recycleAPI from "./controllers/recycleAPI.js";
 import routAPI, { fetchRouts } from "./controllers/routAPI.js";
 import stripeWebhook from "./webhooks/stripeWebhook.js";
+import chapaWebhook from "./webhooks/chapaWebhook.js";
 import cancelledTicketAPI from "./controllers/cancelledTicketAPI.js";
 import subroutAPI, { getRout } from "./controllers/subroutAPI.js";
 //......import controller.....
@@ -86,6 +88,10 @@ app.post(
   express.raw({ type: "application/json" }),
   stripeWebhook,
 );
+
+// app.post("/webhook/chapa", express.json(), chapaWebhook);
+app.route("/webhook/chapa").get(chapaWebhook).post(chapaWebhook);
+// app.get("/webhook/chapa", express.json(), chapaWebhook);
 // .......... stripe web hook .........
 
 app.use(express.json());
@@ -164,6 +170,7 @@ app.use("/routsForSubrout", SubroutRouter); // Subrout routes
 app.use("/tpassignment", TrafficAssignmentRouter);
 app.use("/voilationReports", ReportRouter); //report routes
 app.use("/cars", getUserID, commonRouter(carAPI, permissions.cars)); //car routes
+app.use("/", reportNotification); //report notification routes
 
 //employee
 app.post(
