@@ -21,6 +21,7 @@ import Logo from "../assets/etlogo.jpg";
 import "./css/AdminPage.css";
 import ChangePasswordModal from "../verify/ChangePasswordModal";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 const { Header, Sider, Content, Footer } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -38,6 +39,7 @@ function AdminpageHeader(props) {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [notifications, setNotifications] = useState([]);
   const [previousCount, setPreviousCount] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (userData?.roles !== "officer") return;
@@ -76,11 +78,21 @@ function AdminpageHeader(props) {
 
   const openNotification = async (notificationId, reportId) => {
     try {
-      await axios.put(`${backendURL}/notifications/open/${notificationId}`);
+      const res = await axios.put(
+        `${backendURL}/notifications/open/${notificationId}`,
+      );
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
 
       // Optional:
-      // navigate(`/reports/${reportId}`);
+      navigate("/adminDashboard/*", {
+        state: {
+          // reportId: res.data.reportId,
+          selectedMenu: "voilationReport",
+          reportId: res.data.reportId,
+        },
+      });
+      //  for production use the following line
+      // navigate(`/voilations/${res.data.reportId}`);
     } catch (err) {
       console.log(err);
     }
@@ -94,7 +106,8 @@ function AdminpageHeader(props) {
         renderItem={(item) => (
           <List.Item
             style={{ cursor: "pointer" }}
-            onClick={() => openNotification(item._id, item.reportId)}
+            // onClick={() => openNotification(item._id, item.reportId)}
+            onClick={() => openNotification(item._id)}
           >
             <List.Item.Meta title={item.title} description={item.message} />
           </List.Item>

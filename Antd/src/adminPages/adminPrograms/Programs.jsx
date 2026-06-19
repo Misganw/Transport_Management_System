@@ -4,10 +4,13 @@ import DynamicForm from "../../admin/common/DynamicForm";
 // import { ownerByCompany } from "../../admin/common/makeServices";
 import { Form } from "antd";
 import dayjs from "dayjs";
+import axios from "axios";
+import { toast } from "react-toastify";
 import {
   routService,
   carServices,
   programServices,
+  driverServices,
 } from "../../admin/common/makeServices";
 
 export default function ProgramForm({
@@ -18,6 +21,9 @@ export default function ProgramForm({
   const [form] = Form.useForm();
   const [rout, setRout] = useState([]);
   const [car, setCar] = useState([]);
+  const [driver, setDriver] = useState([]);
+  const [tariffMsg, setTariffMsg] = useState("");
+  const baseURL = import.meta.env.VITE_APP_BASE_URL || "http://localhost:5000";
   useEffect(() => {
     const fetchRout = async () => {
       try {
@@ -56,13 +62,72 @@ export default function ProgramForm({
     };
     fetchCar();
   }, []);
+
+  useEffect(() => {
+    const fetchDriver = async () => {
+      try {
+        const res = await driverServices.list();
+        setDriver(
+          res.data.map((driver) => ({
+            label: `${driver.fName} ${driver.mName} ${driver.lName}`,
+            value: driver._id,
+          })),
+        );
+      } catch (err) {
+        toast.error("Error loading drivers:", err);
+      }
+    };
+    fetchDriver();
+  }, []);
+
+  const fetchTariff = async (routId, carId) => {
+    // console.log("Route:", routId);
+    // console.log("Car:", carId);
+    if (!routId || !carId) return;
+
+    try {
+      const res = await axios.get(`${baseURL}/getTarrifByRouteAndCar`, {
+        params: {
+          routId,
+          carId,
+        },
+      });
+
+      if (res.data) {
+        form.setFieldsValue({
+          tarrif: res.data.amount, // replace with actual field name
+        });
+        setTariffMsg("");
+      } else {
+        form.setFieldsValue({
+          tarrif: 100000000000000,
+        });
+        setTariffMsg("Tarrif not found. Enter manually.");
+      }
+    } catch (err) {
+      console.error("Error loading tariff:", err);
+
+      form.setFieldsValue({
+        tarrif: null,
+      });
+    }
+  };
+
   const programFields = [
     {
       name: "routId",
       label: "Route",
       type: "select",
       colSpan: 12,
-      props: { options: rout, placeholder: "Select Route" },
+      props: {
+        options: rout,
+        placeholder: "Select Route",
+        onChange: (routId) => {
+          const carId = form.getFieldValue("carId");
+
+          fetchTariff(routId, carId);
+        },
+      },
       rules: [{ required: true }],
     },
     {
@@ -73,6 +138,8 @@ export default function ProgramForm({
       props: {
         options: car,
         placeholder: "Select Car",
+        showSearch: true,
+        optionFilterProp: "label",
         onChange: (carId) => {
           form.setFieldsValue({ seat: null });
           const selectedCar = car.find((c) => c.value === carId);
@@ -81,7 +148,25 @@ export default function ProgramForm({
               seat: selectedCar.seats, //auto-populate seat
             });
           }
+
+          const routId = form.getFieldValue("routId");
+
+          fetchTariff(routId, carId);
         },
+      },
+      rules: [{ required: true }],
+    },
+
+    {
+      name: "driverId",
+      label: "Drivers",
+      type: "select",
+      colSpan: 12,
+      props: {
+        options: driver,
+        placeholder: "Select Driver",
+        showSearch: true,
+        optionFilterProp: "label",
       },
       rules: [{ required: true }],
     },
@@ -121,7 +206,9 @@ export default function ProgramForm({
       label: "Tariff",
       type: "number",
       colSpan: 12,
+      props: { disabled: false },
       rules: [{ required: true }],
+      help: tariffMsg, // IMPORTANT
     },
     {
       name: "date",
@@ -160,6 +247,7 @@ export default function ProgramForm({
       }}
       onFinish={onFinish}
       onCancel={onCancel}
+      tariffMsg={tariffMsg} // add this
     />
   );
 }

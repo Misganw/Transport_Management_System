@@ -58,6 +58,23 @@ const list = async (req, res) => {
       qry.officerAssignmentId = { $in: getAssignedOfficerId.map((a) => a._id) };
     }
 
+    if (user.roles === "driver") {
+      // Find all reports assigned to this officer
+      const getUserId = await User.find({
+        _id: user.id,
+      }).select("employeeId");
+      // user_Id = { $in: getUserId.map((a) => a.employeeId) };
+      const getProgram = await Program.find({
+        driverId: { $in: getUserId.map((a) => a.employeeId) },
+      }).select("_id");
+
+      const getTicket = await Ticket.find({
+        programId: { $in: getProgram.map((a) => a._id) },
+      }).select("_id");
+
+      qry.ticketId = { $in: getTicket.map((a) => a._id) };
+    }
+
     const rpt = await Report.find({
       ...filter,
       ...qry,
@@ -74,6 +91,7 @@ const list = async (req, res) => {
             populate: [
               { path: "routId", select: "departure arrival" },
               { path: "carId", select: "type model level plateNumber" },
+              { path: "driverId", select: "fName mName lName CDL RID" },
             ],
           },
         ],
@@ -253,6 +271,100 @@ export const getAssignedPoliceByTicket = async (req, res) => {
       .json({ message: "Error getting Assigned Traffic police by Subrout" });
   }
 };
+
+export const getReportById = async (req, res) => {
+  try {
+    const user = req.user; // from auth middleware
+    const { reportId } = req.params;
+    const rpt = await Report.findById(reportId)
+      .populate("companyId", "companyName")
+      .populate("userId", "name roles")
+      .populate("ruleID", "title")
+      .populate({
+        path: "ticketId",
+        populate: [
+          { path: "passengerId", select: "fName mName lName phone userId" },
+          {
+            path: "programId",
+            populate: [
+              { path: "routId", select: "departure arrival" },
+              { path: "carId", select: "type model level plateNumber" },
+              { path: "driverId", select: "fName mName lName CDL RID" },
+            ],
+          },
+        ],
+      })
+      .populate({
+        path: "officerAssignmentId",
+        populate: [
+          {
+            path: "trafficOfficerId",
+            select: "fName mName lName phone",
+          },
+          {
+            path: "subrouteId",
+            select: "subdeparture subarrival",
+          },
+        ],
+      });
+    // console.log("Role", rpt[0]?.userId?.roles);
+    // console.log("logged in user", user.id);
+    res.json({
+      statusInfo: rpt.Status,
+      companyInfo: rpt.companyId?.companyName,
+      reporterInfo: `${rpt.userId?.name}|${rpt.ueserId?.roles}`,
+      reportedByInfo: `${rpt.ticketId?.passengerId?.fName} '' ${rpt.ticketId?.passengerId?.mName}`,
+      officerInfo: `${rpt.officerAssignmentId?.trafficOfficerId?.fName} '' ${rpt.officerAssignmentId?.trafficOfficerId?.mName}`,
+      officeremail: rpt.officerAssignmentId?.trafficOfficerId?.email,
+      officerPhone: rpt.officerAssignmentId?.trafficOfficerId?.phone,
+      ruleInfo: rpt.ruleId?.title,
+      driverInfo: `${rpt.ticketId?.programId?.driverId?.fName} '' ${rpt.ticketId?.programId?.driverId?.mName}`,
+      routInfo: `${rpt.ticketId?.programId?.routId?.departure} '<- ->' ${rpt.ticketId?.programId?.routId?.arrival}`,
+      subroutInfo: `${rpt.officerAssignmentId?.subroutId?.subdeparture} '<- ->' ${rpt.officerAssignmentId?.subroutId?.subarrival}`,
+      carInfo: `${rpt.ticketId?.programId?.carId?.type} '|' ${rpt.ticketId?.programId?.carId?.model} '|' ${rpt.ticketId?.programId?.carId?.level} '|' ${rpt.ticketId?.programId?.carId?.plateNumber}`,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error getting Report List" });
+  }
+};
+// export const getDriverIdByProgramId = async (req, res) => {
+//   const user = req.user;
+//   try {
+//     const { ticketId } = req.query;
+
+//     const getTicket = await Ticket.findById(ticketId);
+//     if (!getTicket) {
+//       return res.status(404).json({ message: "Ticket not found" });
+//     }
+//     // Security check
+//     if (getTicket.userId.toString() !== user.id) {
+//       return res.status(403).json({ message: "Unauthorized ticket access" });
+//     }
+
+//     const getProgram = await Program.findById(getTicket.programId);
+
+//     const Rt = await Rout.findById(getProgram.routId);
+
+//     const rtId = Rt._id;
+
+//     const subrout = await Subrout.find({
+//       routId: rtId,
+//     }).select("_id");
+
+//     const assinedPolice = await Police.find({
+//       subrouteId: { $in: subrout.map((s) => s._id) },
+//     })
+//       .populate("subrouteId", "subdeparture subarrival")
+//       .populate("trafficOfficerId", "fName mName lName phone");
+//     res.json(assinedPolice);
+//   } catch (error) {
+//     console.log(error);
+//     res
+//       .status(500)
+//       .json({ message: "Error getting Assigned Traffic police by Subrout" });
+//   }
+// };
 
 // Step 2: Create a default export object
 const routAPI = {

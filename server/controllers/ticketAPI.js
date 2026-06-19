@@ -377,6 +377,7 @@ export const payTicket = async (req, res) => {
   try {
     const { ticketId, provider } = req.body; // frontend selects provider
     const ticket = await Ticket.findById(ticketId)
+      .populate({ path: "companyId", select: "companyName" })
       .populate({
         path: "programId",
         populate: { path: "routId", select: "departure arrival" },
@@ -553,12 +554,14 @@ const createChapaPayment = async (ticket, res) => {
 
 export const getTicketById = async (req, res) => {
   try {
-    const ticket = await Ticket.findById(req.params.ticketId).populate({
-      path: "programId",
-      populate: {
-        path: "routId",
-      },
-    });
+    const ticket = await Ticket.findById(req.params.ticketId)
+      .populate({ path: "companyId", select: "companyName" })
+      .populate({
+        path: "programId",
+        populate: {
+          path: "routId",
+        },
+      });
     if (!ticket) return res.status(404).json({ message: "Ticket not found" });
     // console.log(
     //   "Fetched ticket for ID:",
@@ -568,6 +571,7 @@ export const getTicketById = async (req, res) => {
     // );
 
     res.json({
+      companyName: ticket.companyId?.companyName,
       passengerName: ticket.passengerName,
       email: ticket.email,
       phone: ticket.phone,

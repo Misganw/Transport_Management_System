@@ -437,16 +437,6 @@ export default function PenalityTable({ reportId }) {
             </Col>
           ))}
         </Row>
-
-        {/* <Button
-                type="primary"
-                block
-                style={{ marginTop: 20 }}
-                disabled={!provider}
-                onClick={payTicket}
-              >
-                Proceed To Payment
-              </Button> */}
       </Modal>
     </>
   );

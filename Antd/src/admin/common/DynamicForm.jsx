@@ -51,11 +51,16 @@ export default function DynamicForm({
   form,
   onFinish,
   onCancel, // <-- NEW
+  tariffMsg, // <-- NEW
 }) {
   useEffect(() => {
     if (form) form.setFieldsValue(initialValues || {});
   }, [initialValues]);
-
+  // {
+  //   tariffMsg && (
+  //     <div style={{ color: "red", marginTop: 5 }}>{props.tariffMsg}</div>
+  //   );
+  // }
   return (
     <Form
       form={form}
@@ -67,6 +72,7 @@ export default function DynamicForm({
         {fields.map((f) => (
           <Col xs={24} sm={f.colSpan || 12} key={f.name}>
             <Form.Item
+              help={f.help} // ADD THIS
               name={f.name}
               label={f.label}
               rules={f.rules || []}

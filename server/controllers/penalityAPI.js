@@ -99,6 +99,7 @@ export const getPenalityById = async (req, res) => {
   try {
     const penality = await Penality.findById(req.params.penalityId)
       .populate({ path: "companyId", select: "companyName" })
+      .populate({ path: "driverId", select: "fName mName lName" })
       .populate({ path: "userId", select: "name" })
       .populate({
         path: "reportId",
@@ -133,6 +134,9 @@ export const getPenalityById = async (req, res) => {
 
     res.json({
       companyName: penality.companyId?.companyName,
+      driverInfo: penality.driverId
+        ? `${penality.driverId.fName} ${penality.driverId.mName} ${penality.driverId.lName}`
+        : "N/A",
       email: penality.reportId?.ticketId?.email,
       phone: penality.reportId?.ticketId?.phone,
       paymentCode: penality.paymentCode,
@@ -459,7 +463,7 @@ const createChapaPayment = async (penality, res) => {
       },
     });
     const chapaData = response.data;
-    console.log("Chapa payment response:", chapaData);
+    // console.log("Chapa payment response:", chapaData);
     return res.json({
       url: chapaData.data.checkout_url,
     });

@@ -125,6 +125,11 @@ export default function RoutTable() {
           columnsDef={columnsTarrif}
           service={tarrifService}
           FormComponent={TarrifForm}
+          canCreate={canCreate}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          canView={canView}
+          canRestore={canRestore}
           transformRecord={(r) => ({
             ...r,
             rout: `${r.routId?.departure || "Unknown"} -> ${

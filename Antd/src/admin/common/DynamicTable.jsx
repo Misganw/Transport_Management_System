@@ -57,6 +57,7 @@ export default function DynamicTable({
   canDelete,
   canView,
   canRestore,
+  notificationReportId,
 }) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -73,6 +74,12 @@ export default function DynamicTable({
   const [ViewTickets, setViewTickets] = useState(null);
 
   const { userData } = useContext(AppContext);
+
+  // useEffect(() => {
+  //   if (notificationReportId) {
+  //     setExpandedRowKeys([notificationReportId]);
+  //   }
+  // }, [notificationReportId]);
 
   // const socket = io(import.meta.env.VITE_BACKEND_URL, {
   //   withCredentials: true,
@@ -126,6 +133,16 @@ export default function DynamicTable({
   useEffect(() => {
     setVisibleColumns(columnsDef.map((c) => c.key || c.dataIndex));
   }, [columnsDef]);
+
+  useEffect(() => {
+    if (!notificationReportId || !data?.length) return;
+
+    const match = data.find((item) => item.raw._id === notificationReportId);
+
+    if (match) {
+      setExpandedRowKeys([match.key]);
+    }
+  }, [notificationReportId, data]);
 
   const roles = userData?.roles || [];
   // const filtered = useMemo(
@@ -396,12 +413,15 @@ export default function DynamicTable({
         dataSource={paginated}
         columns={visibleColumnsDef}
         pagination={false}
+        scroll={{ x: "max-content" }}
         expandable={{
           expandedRowKeys: ticketProgramId
             ? [ticketProgramId]
             : penalityReportId
               ? [penalityReportId]
-              : expandedRowKeys,
+              : notificationReportId
+                ? [notificationReportId]
+                : expandedRowKeys,
 
           onExpandedRowsChange: (keys) => {
             setExpandedRowKeys(keys);

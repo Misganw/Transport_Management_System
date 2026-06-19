@@ -30,6 +30,8 @@ import TrafficAssignmentRouter from "./routs/trafficPoliceAssignmentRouts.js";
 import ReportRouter from "./routs/reportRouts.js";
 import RenalityRouter from "./routs/penalityRouts.js";
 import reportNotification from "./routs/reportNotificationRout.js";
+import DriverRouter from "./routs/driverRouts.js";
+import TarrifRouter from "./routs/tarrifRouts.js";
 
 //......import Rout.....
 
@@ -131,6 +133,7 @@ app.set("io", io);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/empPhotos", express.static(path.join(__dirname, "empPhotos")));
 app.use("/ownerPhotos", express.static(path.join(__dirname, "ownerPhotos")));
+app.use("/driverPhotos", express.static(path.join(__dirname, "driverPhotos")));
 app.use(
   "/companyLogos",
   express.static(path.join(process.cwd(), "companyLogos")),
@@ -171,6 +174,8 @@ app.use("/tpassignment", TrafficAssignmentRouter);
 app.use("/voilationReports", ReportRouter); //report routes
 app.use("/cars", getUserID, commonRouter(carAPI, permissions.cars)); //car routes
 app.use("/", reportNotification); //report notification routes
+app.use("/", DriverRouter); // driver routes
+app.use("/", TarrifRouter); //tarrif routes
 
 //employee
 app.post(

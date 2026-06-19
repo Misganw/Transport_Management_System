@@ -21,13 +21,14 @@ import State from "../../models/addressModel/stateModel.js";
 import Zone from "../../models/addressModel/zoneModel.js";
 import Werda from "../../models/addressModel/weredaModel.js";
 import City from "../../models/addressModel/cityModel.js";
+import ticketPayment from "../../models/ticketsModel.js";
 
 import bcrypt from "bcryptjs";
 
 export const seedDefaultRecords = async (companyId, email) => {
   function generateCDL2() {
     const letters = Array.from({ length: 2 }, () =>
-      String.fromCharCode(65 + Math.floor(Math.random() * 26))
+      String.fromCharCode(65 + Math.floor(Math.random() * 26)),
     ).join("");
 
     const digits = Math.floor(100000 + Math.random() * 900000); // 6 digits
@@ -239,7 +240,18 @@ export const seedDefaultRecords = async (companyId, email) => {
     companyId,
     userId: admin._id,
     penalityId: penality._id,
-    amount: 100,
+    amount: 0,
+    currency: "ETB",
+    paymentDate: new Date(),
+    paymentMethod: "Credit Card",
+    referenceNumber: ssid,
+  });
+  const tickts = await ticketPayment.create({
+    companyId,
+    userId: admin._id,
+    ticketId: ticket._id,
+    amount: 0,
+    currency: "ETB",
     paymentDate: new Date(),
     paymentMethod: "Credit Card",
     referenceNumber: ssid,

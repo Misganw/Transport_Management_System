@@ -29,7 +29,7 @@ const list = async (req, res) => {
 
     const cmp = await Tarrif.find({
       companyId: { $in: companyIds },
-      userId: user.id || user._id,
+      // userId: user.id || user._id,
       ...filter,
     })
       .populate({ path: "routId", select: "departure arrival" })
@@ -101,22 +101,45 @@ export const getByRoute = async (req, res) => {
     const { routId } = req.params;
     const search = req.query.search || "";
 
-  const filter = search
-    ? {
-        $or: [
-          {amount: { $eq: isNaN(Number(search)) ? null : Number(search) }},
-        ],
-      }
-    : {};
-    const tarrifs = await Tarrif.find({ routId, ...filter }).populate("routId", "departure arrival").populate(
-      "carId",
-      "type level"
-    );
+    const filter = search
+      ? {
+          $or: [
+            { amount: { $eq: isNaN(Number(search)) ? null : Number(search) } },
+          ],
+        }
+      : {};
+    const tarrifs = await Tarrif.find({ routId, ...filter })
+      .populate("routId", "departure arrival")
+      .populate("carId", "type level");
     res.json(tarrifs);
   } catch (err) {
     res.status(500).json({ message: "Error fetching tarrifs" });
   }
 };
+
+export const getTarrifByRouteAndCar = async (req, res) => {
+  // console.log("Request received");
+  // console.log(req.query);
+  try {
+    const { routId, carId } = req.query;
+    if (!routId || !carId) {
+      return res.status(400).json({
+        message: "routId and carId are required",
+      });
+    }
+    const tarrifs = await Tarrif.findOne({ routId, carId })
+      .populate("routId", "departure arrival")
+      .populate("carId", "type level");
+    // console.log("Found tariff:", tarrifs);
+    if (!tarrifs) {
+      return res.status(404).json({ message: "Tarrif not found" });
+    }
+    res.json(tarrifs);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching tarrifs" });
+  }
+};
+
 const tarrifAPI = {
   list,
   getOne,

@@ -241,7 +241,14 @@ export const permissions = {
   },
   zone: {
     list: "public",
-    getOne: ["admin", "manager", "passenger", "coordinator", "officer"],
+    getOne: [
+      "admin",
+      "manager",
+      "passenger",
+      "coordinator",
+      "officer",
+      "driver",
+    ],
     create: ["admin", "manager"],
     update: ["admin", "manager"],
     remove: ["admin", "manager"],
@@ -249,7 +256,14 @@ export const permissions = {
   },
   wereda: {
     list: "public",
-    getOne: ["admin", "manager", "passenger", "coordinator", "officer"],
+    getOne: [
+      "admin",
+      "manager",
+      "passenger",
+      "coordinator",
+      "officer",
+      "driver",
+    ],
     create: ["admin", "manager"],
     update: ["admin", "manager"],
     remove: ["admin", "manager"],
@@ -257,7 +271,14 @@ export const permissions = {
   },
   city: {
     list: "public",
-    getOne: ["admin", "manager", "passenger", "coordinator", "officer"],
+    getOne: [
+      "admin",
+      "manager",
+      "passenger",
+      "coordinator",
+      "officer",
+      "driver",
+    ],
     create: ["admin", "manager"],
     update: ["admin", "manager"],
     remove: ["admin", "manager"],
@@ -275,7 +296,7 @@ export const permissions = {
     restore: ["admin", "manager", "passenger", "coordinator", "officer"],
   },
   violation: {
-    list: ["admin", "manager", "passenger", "coordinator", "officer"],
+    list: ["admin", "manager", "passenger", "coordinator", "officer", "driver"],
     getOne: ["admin", "manager", "passenger", "coordinator", "officer"],
     create: ["admin", "manager", "passenger"],
     update: ["admin", "manager", "passenger"],
@@ -283,7 +304,7 @@ export const permissions = {
     fetchRouts: "public",
   },
   tarrif: {
-    list: ["admin", "manager", "passenger", "coordinator", "officer"],
+    list: ["admin", "manager", "passenger", "coordinator", "officer", "driver"],
     getOne: ["admin", "manager", "passenger", "coordinator", "officer"],
     create: ["admin", "manager"],
     update: ["admin", "manager"],

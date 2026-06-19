@@ -4,6 +4,7 @@ import DynamicTable from "../../admin/common/DynamicTable";
 // import { makeService } from "../../admin/common/services";
 import { AppContext } from "../../context/AppContext.jsx";
 import { Button, Space, Tooltip, Modal, Avatar, Row, Col, Tag } from "antd";
+
 import {
   BuildOutlined,
   LoginOutlined,
@@ -38,6 +39,7 @@ import { toast } from "react-toastify";
 import VoilationForm from "./VoilationForm.jsx";
 import PenalityModal from "./penalityModal.jsx";
 import axios from "axios";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // ....... END OF IMPORTING .......
 
@@ -101,8 +103,11 @@ const columnsViolation = [
   },
 ];
 
-export default function VoilationTable() {
+export default function VoilationTable({ notificationReportId }) {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+  // const location = useLocation();
+  // const notificationReportId = location.state?.reportId;
 
   // ROLE Filteration for actions
   const rawRoles = useContext(AppContext)?.userData?.roles;
@@ -128,29 +133,27 @@ export default function VoilationTable() {
   const [penalityReportId, setPenalityReportId] = useState(null);
   const { userData } = useContext(AppContext);
 
-  const [printPenality, setPrintPenality] = useState(null);
-  const [printOpen, setPrintOpen] = useState(false);
+  // const [reportData, setReportData] = useState(null);
+  // const [printOpen, setPrintOpen] = useState(false);
+
+  const [expandedNotificationRow, setExpandedNotificationRow] = useState(null);
+
+  const [checkStatus, setcheckStatus] = useState("");
 
   const onReportClick = (record) => {
     setReportId(record.key);
   };
-
-  // ....... Print  Penalities ......
-  const onPrintPenality = (record) => {
-    setPrintPenality(record);
-    setPrintOpen(true);
+  const canPenalize =
+    userData.roles === "officer" || userData.roles === "admin";
+  const isStatus = (record) => {
+    return record === "paid" || record === "punished";
   };
 
-  // const isReportDatePassed = (reportDate) => {
-  //   if (!reportDate) return true;
-  //   const today = dayjs().format("YYYY-MM-DD");
-  //   const reportDay = dayjs(reportDate).format("YYYY-MM-DD");
-
-  //   return today > reportDay; // string comparison works for ISO dates
-  // };
+  const navigate = useNavigate();
   return (
     <>
       <DynamicTable
+        notificationReportId={notificationReportId}
         title="Reported Violations"
         resourceName="violations"
         columnsDef={[
@@ -178,18 +181,19 @@ export default function VoilationTable() {
                       height: "12px",
                     }}
                     // disabled={isReportDatePassed(record.raw.date)}
+
                     onClick={() => setPenality(record.raw)}
                     icon={<PlusOutlined />}
-                    enabled={
-                      userData.roles === "officer" || userData.roles === "admin"
-                    }
-                    disabled={userData.roles !== "officer"}
+                    // enabled={
+                    //   userData.roles === "officer" || userData.roles === "admin"
+                    // }
+                    disabled={!canPenalize}
                   />
                 </Tooltip>
 
                 <Tooltip
                   title={
-                    userData.roles !== "admin" || userData.roles !== "officer"
+                    !canPenalize
                       ? "Cannot print: report date has passed or insufficient permissions"
                       : "Print Penality"
                   }
@@ -202,12 +206,14 @@ export default function VoilationTable() {
                       fontSize: "12px",
                       height: "12px",
                     }}
-                    disabled={
-                      record.raw.status !== "full" ||
-                      userData.roles !== "admin" ||
-                      userData.roles !== "officer"
+                    disabled={!isStatus(record.raw.Status) || !canPenalize}
+                    onClick={() =>
+                      window.open(
+                        `/voilationReports/report_view/${record.raw._id}`,
+                        "_blank",
+                        "noopener,noreferrer",
+                      )
                     }
-                    onClick={() => onPrintPenality(record)}
                     icon={<PrinterOutlined />}
                   />
                 </Tooltip>
@@ -324,79 +330,6 @@ export default function VoilationTable() {
       {penality && (
         <PenalityModal report={penality} onClose={() => setPenality(null)} />
       )}
-      {/* Leave License Print Modal */}
-      <Modal
-        open={printOpen}
-        onCancel={() => setPrintOpen(false)}
-        footer={null}
-        width={400}
-      >
-        <LeaveLicense program={printPenality} />
-        <div className="printLicence">
-          {/* Print Button */}
-          <Button
-            type="primary"
-            onClick={() => {
-              document.body.classList.add("printing");
-              window.print();
-              setTimeout(() => {
-                document.body.classList.remove("printing");
-              }, 500);
-            }}
-          >
-            Print
-          </Button>
-
-          {/* Export PDF Button */}
-          <Button
-            type="default"
-            onClick={async () => {
-              if (!printPenality) return;
-
-              const input = document.querySelector(".print-program"); // select the program div
-              if (!input) return;
-
-              try {
-                const canvas = await html2canvas(input, {
-                  scale: 3,
-                  backgroundColor: "#fff",
-                });
-
-                const imgData = canvas.toDataURL("image/png");
-
-                // Create A4 PDF
-                const pdf = new jsPDF("p", "mm", "a4");
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-
-                // === IMPORTANT PART ===
-                // Real receipt width (80mm)
-                const receiptWidth = 80;
-
-                // Keep aspect ratio
-                const receiptHeight =
-                  (canvas.height * receiptWidth) / canvas.width;
-
-                // Center horizontally on A4
-                const x = (pageWidth - receiptWidth) / 2;
-
-                // Small top margin
-                const y = 10;
-
-                // Add image
-                pdf.addImage(imgData, "PNG", x, y, receiptWidth, receiptHeight);
-
-                // Save PDF
-                pdf.save(`Penality_${printPenality._id}.pdf`);
-              } catch (err) {
-                console.error("Failed to export PDF", err);
-              }
-            }}
-          >
-            Export PDF
-          </Button>
-        </div>
-      </Modal>
     </>
   );
 }

@@ -21,12 +21,5 @@ reportNotificationRouter.get(
   getUnreadNotifications,
 );
 reportNotificationRouter.put("/notifications/open/:id", openNotification);
-// reportNotificationRouter.post("/payTicket", payTicket);
-// reportNotificationRouter.delete(
-//   "/cancelTicket/:ticketId",
-//   getUserID,
-//   requireRole("cancel ticket", "admin", "manager", "passenger"),
-//   cancelTicket,
-// );
 
 export default reportNotificationRouter;

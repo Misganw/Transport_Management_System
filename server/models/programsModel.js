@@ -22,6 +22,11 @@ const programSchema = new mongoose.Schema(
       ref: "cars",
       required: true,
     },
+    driverId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "drivers",
+      required: true,
+    },
     paidSeatCount: { type: Number },
     queue: { type: String },
     tarrif: { type: Number },

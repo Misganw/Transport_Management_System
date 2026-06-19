@@ -1,8 +1,22 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Result, Spin, Descriptions, Button } from "antd";
+import {
+  Result,
+  Spin,
+  Descriptions,
+  Button,
+  Row,
+  Col,
+  Typography,
+  Divider,
+  Table,
+  Tag,
+} from "antd";
 import axios from "axios";
-
+import PaymentReceipt from "./PaymentReceipt";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+const { Title, Text } = Typography;
 export default function PaymentSuccess() {
   const [params] = useSearchParams();
   const ticketId = params.get("ticketId"); // get ticketId from URL query
@@ -73,6 +87,44 @@ export default function PaymentSuccess() {
 
   if (error) return <Result status="error" title="Error" subTitle={error} />;
 
+  const printReceipt = () => {
+    window.print();
+  };
+
+  const downloadPDF = async () => {
+    const receipt = document.getElementById("payment_receipt");
+
+    if (!receipt) return;
+
+    try {
+      const canvas = await html2canvas(receipt, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+
+      const imgProps = pdf.getImageProperties(imgData);
+
+      const pdfWidth = pageWidth;
+
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      pdf.save(
+        `Receipt-${data.paymentCode || data.ticketCode || Date.now()}.pdf`,
+      );
+    } catch (err) {
+      console.error("PDF Export Error", err);
+    }
+  };
+
   if (!data)
     return (
       <Result
@@ -83,98 +135,35 @@ export default function PaymentSuccess() {
     );
 
   return (
-    <Result
-      status="success"
-      title="Payment Successful!"
-      subTitle={
-        paymentType === "ticket"
-          ? "Your ticket is confirmed and ready to print."
-          : "Your penality payment was completed successfully."
-      }
-      extra={[
-        <Button type="link" key="dashboard" onClick={goToDashboard}>
-          Back to Dashboard
-        </Button>,
-      ]}
-    >
-      <Descriptions bordered column={1} style={{ marginTop: 20 }}>
-        {/* ========================= */}
-        {/* TICKET DETAILS */}
-        {/* ========================= */}
-        {paymentType === "ticket" && (
-          <>
-            <Descriptions.Item label="Passenger Name">
-              {data.passengerName}
-            </Descriptions.Item>
+    <>
+      <div
+        id="payment_receipt"
+        style={{
+          padding: 30,
+          background: "#f5f5f5",
+          minHeight: "100vh",
+        }}
+      >
+        <PaymentReceipt data={data} paymentType={paymentType} />
+      </div>
+      <div
+        style={{
+          marginTop: 20,
+          textAlign: "center",
+          display: "flex",
+          justifyContent: "center",
+          gap: 10,
+        }}
+      >
+        <Button type="primary" onClick={printReceipt}>
+          Print Receipt
+        </Button>
 
-            <Descriptions.Item label="Email">{data.email}</Descriptions.Item>
+        <Button onClick={downloadPDF}>Download PDF</Button>
 
-            <Descriptions.Item label="Seat Number">
-              {data.seatNumber}
-            </Descriptions.Item>
-
-            <Descriptions.Item label="Route">
-              {data.route || "N/A"}
-            </Descriptions.Item>
-
-            <Descriptions.Item label="Ticket Price">
-              ${data.paidAmount || "N/A"}
-            </Descriptions.Item>
-          </>
-        )}
-
-        {/* ========================= */}
-        {/* PENALITY DETAILS */}
-        {/* ========================= */}
-        {paymentType === "penality" && (
-          <>
-            <Descriptions.Item label="Company">
-              {data.companyName || "N/A"}
-            </Descriptions.Item>
-
-            <Descriptions.Item label="Reporter Email">
-              {data.email || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Reporter Phone">
-              {data.phone || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Penalty Code">
-              {data.paymentCode}
-            </Descriptions.Item>
-            <Descriptions.Item label="Amount">${data.amount}</Descriptions.Item>
-            <Descriptions.Item label="Status">{data.status}</Descriptions.Item>
-            <Descriptions.Item label="Route">
-              {data.route || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Set By">
-              {data.setBy || "N/A"}
-            </Descriptions.Item>
-          </>
-        )}
-
-        {/* ========================= */}
-        {/* PAYMENTS */}
-        {/* ========================= */}
-        {data.payments && data.payments.length > 0 ? (
-          data.payments.map((p, index) => (
-            <Descriptions.Item
-              key={index}
-              label={`Payment via ${p.provider.toUpperCase()}`}
-            >
-              Amount: {p.amount} {p.currency?.toUpperCase()} <br />
-              Paid At: {new Date(p.paidAt).toLocaleString()}
-              <br />
-              Customer: {p.customer_name} ({p.customer_email}) <br />
-              Payment ID: {p.providerPaymentId}
-            </Descriptions.Item>
-          ))
-        ) : (
-          <Descriptions.Item label="Payments">
-            No payment recorded
-          </Descriptions.Item>
-        )}
-      </Descriptions>
-    </Result>
+        <Button onClick={goToDashboard}>Back To Dashboard</Button>
+      </div>
+    </>
   );
   // return (
   //   <Result

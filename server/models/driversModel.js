@@ -34,8 +34,9 @@ const driverSchema = new mongoose.Schema(
     city: { type: String },
     email: { type: String },
     phone: { type: String },
+    profileImage: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("drivers", driverSchema);

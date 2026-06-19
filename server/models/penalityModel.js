@@ -28,7 +28,8 @@ const penalitySchema = new mongoose.Schema(
     //   required: true,
     // },
     driverId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "drivers",
       required: true,
     },
     reportId: {

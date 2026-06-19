@@ -42,6 +42,7 @@ import AdminNewsUpload from "./AdminNewsUpload";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import UsersTable from "./UsersTable";
 import CarTables from "../adminPages/adminCars/CarTables";
+import DriversTable from "../adminPages/adminDrivers/DriverTable.jsx";
 import EmployeeTable from "../adminPages/adminEmployee/EmployeeTable.jsx";
 import CountryStateTable from "../adminPages/adminAddresses/CountyStateTable.jsx";
 import ZoneTable from "../adminPages/adminAddresses/ZoneTable.jsx";
@@ -60,6 +61,7 @@ import SubroutTable from "../adminPages/routs/subRoutTable.jsx";
 import VoilationTable from "../adminPages/voilationReport/VoilationTable.jsx";
 import { useContext } from "react";
 import { AppContext } from "../context/AppContext.jsx";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Title, Text } = Typography;
@@ -67,6 +69,9 @@ const { Option } = Select;
 const { useBreakpoint } = Grid;
 
 function AdminPage() {
+  const location = useLocation();
+  const navState = location.state || {};
+
   const { backendURL, setIsloggedIn, getUserData } = useContext(AppContext);
   const { userData } = useContext(AppContext);
   const [showSidebar, setShowSidebar] = useState(true);
@@ -90,12 +95,18 @@ function AdminPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (navState?.selectedMenu) {
+      setSelectedMenu(navState.selectedMenu);
+    }
+  }, [navState]);
+
   const screens = useBreakpoint();
   const isSmall = !screens.xs && window.innerWidth <= 360; // extra safety
 
   // State
   const [collapsed, setCollapsed] = useState(false);
-  const [selectedMenu, setSelectedMenu] = useState("");
+  const [selectedMenu, setSelectedMenu] = useState(navState.selectedMenu || "");
   // Render content dynamically based on selected menu
   const queryClient = new QueryClient();
   const renderContent = () => {
@@ -135,6 +146,7 @@ function AdminPage() {
         );
       }
     }
+
     switch (selectedMenu) {
       case "countryState":
         return <CountryStateTable />;
@@ -148,6 +160,8 @@ function AdminPage() {
         return <EmployeeTable />;
       case "owners":
         return <OwnerTable />;
+      case "drivers":
+        return <DriversTable />;
       case "users":
         return <UsersTable />;
       case "routs":
@@ -169,7 +183,7 @@ function AdminPage() {
       case "asignTpolices":
         return <AssignPoliceTable />;
       case "voilationReport":
-        return <VoilationTable />;
+        return <VoilationTable notificationReportId={navState?.reportId} />;
       case "analytics":
         return <Analytics />;
       case "reports":

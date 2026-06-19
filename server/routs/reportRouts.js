@@ -3,6 +3,7 @@ import express from "express";
 import {
   getTicketId,
   getAssignedPoliceByTicket,
+  getReportById,
 } from "../controllers/reportAPI.js";
 import getUserID from "../middleware/middleware.js";
 
@@ -11,6 +12,7 @@ const ReportRouter = express.Router();
 
 ReportRouter.get("/", getUserID, getTicketId);
 ReportRouter.get("/:ticketId", getUserID, getAssignedPoliceByTicket);
+ReportRouter.get("/report_view/:reportId", getUserID, getReportById);
 ReportRouter.get(
   "/assigned-police/:ticketId",
   getUserID,

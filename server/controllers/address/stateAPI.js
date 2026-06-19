@@ -12,7 +12,7 @@ const list = async (req, res) => {
     // Get all owners that belong to the current user in this company
     const country = await Country.find({
       companyId: user.companyID,
-      userId: user.id, // only owners created by this user
+      // userId: user.id, // only owners created by this user
     }).select("_id");
 
     const countryIds = country.map((c) => c._id);
@@ -46,7 +46,7 @@ const getOne = async (req, res) => {
   try {
     const state = await Country.findById(req.params.id).populate(
       "_id",
-      "stateName"
+      "stateName",
     ); // fetch only StateName
     res.json(state);
   } catch (error) {

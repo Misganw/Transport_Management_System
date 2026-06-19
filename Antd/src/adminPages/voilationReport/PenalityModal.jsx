@@ -47,6 +47,10 @@ export default function PenalityModal({ report, onClose }) {
             } | ${dayjs(r.createdAt).format("YYYY-MM-DD")}`,
             value: r._id,
             reason: r.ruleID?.title,
+            driverId: r.ticketId?.programId?.driverId?._id,
+            driverName: r.ticketId
+              ? `${r.ticketId?.programId?.driverId?.fName} ${r.ticketId?.programId?.driverId?.mName} ${r.ticketId?.programId?.driverId?.lName}`
+              : "NA",
           })),
         );
         // console.log("Passengers for ticket modal:", voilationReport);
@@ -106,6 +110,8 @@ export default function PenalityModal({ report, onClose }) {
               if (selectedR) {
                 form.setFieldsValue({
                   reason: selectedR.reason,
+                  driverId: selectedR.driverId,
+                  driverName: selectedR.driverName,
                 });
               }
             }}
@@ -122,10 +128,18 @@ export default function PenalityModal({ report, onClose }) {
 
         <Form.Item
           label="Driver License Number"
-          name="driverId"
+          name="driverName"
           rules={[{ required: true }]}
         >
           <Input placeholder="enter driver license number" />
+        </Form.Item>
+        <Form.Item
+          label="Driver Id"
+          name="driverId"
+          rules={[{ required: true }]}
+          hidden
+        >
+          <Input />
         </Form.Item>
 
         <Form.Item

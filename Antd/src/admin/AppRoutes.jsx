@@ -32,6 +32,8 @@ import GoogleSuccess from "./GoogleSuccess";
 import Settings from "./Settings.jsx";
 import HomeSetting from "../HomeSetting.jsx";
 import PaymentSuccess from "./success/PaymentSuccess.jsx";
+import VoilationTable from "../adminPages/voilationReport/VoilationTable.jsx";
+import ReportView from "../adminPages/voilationReport/ReportView.jsx";
 
 //... End of Imports
 function AppRoutes() {
@@ -71,6 +73,11 @@ function AppRoutes() {
         <Route path="/passwordReset" element={<PasswordEntry />}></Route>
         <Route path="/google-success" element={<GoogleSuccess />} />
         <Route path="/payment_success" element={<PaymentSuccess />} />
+        <Route path="/violations" element={<VoilationTable />} />
+        <Route
+          path="/voilationReports/report_view/:reportId"
+          element={<ReportView />}
+        />
       </Routes>
       {/* </BrowserRouter> */}
     </div>
