@@ -34,6 +34,7 @@ import HomeSetting from "../HomeSetting.jsx";
 import PaymentSuccess from "./success/PaymentSuccess.jsx";
 import VoilationTable from "../adminPages/voilationReport/VoilationTable.jsx";
 import ReportView from "../adminPages/voilationReport/ReportView.jsx";
+import PenalityView from "../adminPages/voilationReport/PenalityView.jsx";
 
 //... End of Imports
 function AppRoutes() {
@@ -78,6 +79,7 @@ function AppRoutes() {
           path="/voilationReports/report_view/:reportId"
           element={<ReportView />}
         />
+        <Route path="/penality_view/:penalityId" element={<PenalityView />} />
       </Routes>
       {/* </BrowserRouter> */}
     </div>

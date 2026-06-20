@@ -252,7 +252,6 @@ app.use("/users", getUserID, commonRouter(userAPI, permissions.user));
 app.get("/routsforHome", fetchRouts);
 app.use("/routs", getUserID, commonRouter(routAPI, permissions.routs));
 app.use("/subrouts", getUserID, commonRouter(subroutAPI, permissions.subrouts));
-
 app.use("/tarrifs", getUserID, commonRouter(tarrifAPI, permissions.tarrif));
 app.use(
   "/violations",

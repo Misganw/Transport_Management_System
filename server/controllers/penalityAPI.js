@@ -99,7 +99,10 @@ export const getPenalityById = async (req, res) => {
   try {
     const penality = await Penality.findById(req.params.penalityId)
       .populate({ path: "companyId", select: "companyName" })
-      .populate({ path: "driverId", select: "fName mName lName" })
+      .populate({
+        path: "driverId",
+        select: "fName mName lName CDL email, phone",
+      })
       .populate({ path: "userId", select: "name" })
       .populate({
         path: "reportId",
@@ -115,10 +118,13 @@ export const getPenalityById = async (req, res) => {
             path: "ticketId",
             populate: {
               path: "programId",
-              populate: {
-                path: "carId",
-                select: "type model level plateNumber",
-              },
+              populate: [
+                {
+                  path: "carId",
+                  select: "type model level plateNumber",
+                },
+                { path: "routId", select: "arrival departure" },
+              ],
             },
           },
         ],
@@ -147,6 +153,7 @@ export const getPenalityById = async (req, res) => {
         : "",
       status: penality.status,
       paidAt: penality.paidAt,
+      dateInfo: penality.createdAt.toISOString().split("T")[0],
       payments: penality.payments.map((p) => ({
         provider: p.provider,
         amount: p.amount,
@@ -156,6 +163,21 @@ export const getPenalityById = async (req, res) => {
         paidAt: p.paidAt,
         providerPaymentId: p.providerPaymentId,
       })),
+      statusInfo: penality.status || "NA",
+      reporterInfo: `${penality.userId?.name}|${penality.ueserId?.roles}`,
+      reportedByInfo: `${penality.reportId?.ticketId?.passengerId?.fName}   ${penality.reportId?.ticketId?.passengerId?.mName}`,
+      officerInfo: `${penality.reportId?.officerAssignmentId?.trafficOfficerId?.fName}   ${penality.reportId?.officerAssignmentId?.trafficOfficerId?.mName}`,
+      officerEmail:
+        penality.reportId?.officerAssignmentId?.trafficOfficerId?.email || "NA",
+      officerPhone:
+        penality.reportId?.officerAssignmentId?.trafficOfficerId?.phone || "NA",
+      ruleInfo: penality.ruleID?.title || "NA",
+      driverInfo: `${penality.driverId?.fName} '' ${penality.driverId?.mName}`,
+      CDLInfo: penality.driverId?.CDL || "NA",
+      driverPhone: penality.driverId?.phone || "NA",
+      routInfo: `${penality.reportId?.ticketId?.programId?.routId?.departure} <- -> ${penality.reportId?.ticketId?.programId?.routId?.arrival}`,
+      subroutInfo: `${penality.reportId?.officerAssignmentId?.subrouteId?.subdeparture} '<- ->' ${penality.reportId?.officerAssignmentId?.subrouteId?.subarrival}`,
+      carInfo: `${penality.reportId?.ticketId?.programId?.carId?.type} | ${penality.reportId?.ticketId?.programId?.carId?.level} | ${penality.reportId?.ticketId?.programId?.carId?.plateNumber}`,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

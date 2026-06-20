@@ -289,7 +289,10 @@ export const getReportById = async (req, res) => {
             populate: [
               { path: "routId", select: "departure arrival" },
               { path: "carId", select: "type model level plateNumber" },
-              { path: "driverId", select: "fName mName lName CDL RID" },
+              {
+                path: "driverId",
+                select: "fName mName lName CDL RID phone email",
+              },
             ],
           },
         ],
@@ -310,18 +313,21 @@ export const getReportById = async (req, res) => {
     // console.log("Role", rpt[0]?.userId?.roles);
     // console.log("logged in user", user.id);
     res.json({
-      statusInfo: rpt.Status,
-      companyInfo: rpt.companyId?.companyName,
+      statusInfo: rpt.Status || "NA",
+      companyInfo: rpt.companyId?.companyName || "NA",
       reporterInfo: `${rpt.userId?.name}|${rpt.ueserId?.roles}`,
-      reportedByInfo: `${rpt.ticketId?.passengerId?.fName} '' ${rpt.ticketId?.passengerId?.mName}`,
-      officerInfo: `${rpt.officerAssignmentId?.trafficOfficerId?.fName} '' ${rpt.officerAssignmentId?.trafficOfficerId?.mName}`,
-      officeremail: rpt.officerAssignmentId?.trafficOfficerId?.email,
-      officerPhone: rpt.officerAssignmentId?.trafficOfficerId?.phone,
-      ruleInfo: rpt.ruleId?.title,
+      reportedByInfo: `${rpt.ticketId?.passengerId?.fName}   ${rpt.ticketId?.passengerId?.mName}`,
+      officerInfo: `${rpt.officerAssignmentId?.trafficOfficerId?.fName}   ${rpt.officerAssignmentId?.trafficOfficerId?.mName}`,
+      officerEmail: rpt.officerAssignmentId?.trafficOfficerId?.email || "NA",
+      officerPhone: rpt.officerAssignmentId?.trafficOfficerId?.phone || "NA",
+      ruleInfo: rpt.ruleID?.title || "NA",
       driverInfo: `${rpt.ticketId?.programId?.driverId?.fName} '' ${rpt.ticketId?.programId?.driverId?.mName}`,
-      routInfo: `${rpt.ticketId?.programId?.routId?.departure} '<- ->' ${rpt.ticketId?.programId?.routId?.arrival}`,
-      subroutInfo: `${rpt.officerAssignmentId?.subroutId?.subdeparture} '<- ->' ${rpt.officerAssignmentId?.subroutId?.subarrival}`,
-      carInfo: `${rpt.ticketId?.programId?.carId?.type} '|' ${rpt.ticketId?.programId?.carId?.model} '|' ${rpt.ticketId?.programId?.carId?.level} '|' ${rpt.ticketId?.programId?.carId?.plateNumber}`,
+      CDLInfo: rpt.ticketId?.programId?.driverId?.CDL || "NA",
+      driverPhone: rpt.ticketId?.programId?.driverId?.phone || "NA",
+      routInfo: `${rpt.ticketId?.programId?.routId?.departure} <- -> ${rpt.ticketId?.programId?.routId?.arrival}`,
+      subroutInfo: `${rpt.officerAssignmentId?.subrouteId?.subdeparture} '<- ->' ${rpt.officerAssignmentId?.subrouteId?.subarrival}`,
+      carInfo: `${rpt.ticketId?.programId?.carId?.type} | ${rpt.ticketId?.programId?.carId?.level} | ${rpt.ticketId?.programId?.carId?.plateNumber}`,
+      dateInfo: rpt.createdAt.toISOString().split("T")[0],
     });
   } catch (error) {
     console.log(error);

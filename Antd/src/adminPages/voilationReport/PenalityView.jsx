@@ -19,7 +19,7 @@ import axios from "axios";
 const { Title, Text } = Typography;
 
 export default function PaymentReceipt() {
-  const { reportId } = useParams();
+  const { penalityId } = useParams();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const backendURL = import.meta.env.VITE_BACKEND_URL; // e.g., http://localhost:5000
@@ -33,7 +33,7 @@ export default function PaymentReceipt() {
     const loadReport = async () => {
       try {
         const res = await axios.get(
-          `${backendURL}/voilationReports/report_view/${reportId}`,
+          `${backendURL}/penality_view/${penalityId}`,
         );
 
         setData(res.data);
@@ -43,9 +43,9 @@ export default function PaymentReceipt() {
     };
 
     loadReport();
-  }, [reportId]);
+  }, [penalityId]);
   if (!data) {
-    return <div>Loading Report...</div>;
+    return <div>Loading Invoice...</div>;
   }
 
   const printReceipt = () => {
@@ -79,7 +79,7 @@ export default function PaymentReceipt() {
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
       pdf.save(
-        `Voilation Report-${data.driverInfo}-${data.carInfo}-${data.dateInfo}.pdf`,
+        `Invoice-${data.paymentCode}-${data.driverInfo}-${date.dateInfo}.pdf`,
       );
     } catch (err) {
       console.error("PDF Export Error", err);
@@ -110,8 +110,8 @@ export default function PaymentReceipt() {
   const datasource = [
     {
       key: 1,
-      description: " Report Status",
-      amount: `${data.statusInfo} for the faul`,
+      description: "To be Paid",
+      amount: `${data.amount} Birr`,
     },
   ];
 
@@ -136,9 +136,9 @@ export default function PaymentReceipt() {
             {/* Header */}
             <Row justify="space-between">
               <Col>
-                <Title level={2}>Voilation Report</Title>
+                <Title level={2}>Penality Invoice</Title>
 
-                <Text strong>{data.companyInfo}</Text>
+                <Text strong>{data.companyName}</Text>
               </Col>
 
               <Col>
@@ -156,8 +156,8 @@ export default function PaymentReceipt() {
 
             <Row gutter={30}>
               <Col span={12}>
-                <Title level={5}>Reported to (Officer) Information</Title>
-                <div>Reporter Name: {data.officerInfo}</div>
+                <Title level={5}>Traffic Officer </Title>
+                <div>Full Name: {data.officerInfo}</div>
                 <div>Email: {data.officerEmail}</div>
 
                 <div>Phone: {data.officerPhone}</div>
@@ -212,7 +212,7 @@ export default function PaymentReceipt() {
                     color: "#fff",
                   }}
                 >
-                  <Text style={{ color: "#f50606" }}>Voilated Rule</Text>
+                  <Text style={{ color: "#f50606" }}>Required Payment</Text>
 
                   <Title
                     level={5}
@@ -220,7 +220,7 @@ export default function PaymentReceipt() {
                       color: "#fff",
                     }}
                   >
-                    {data.ruleInfo || "NA"}
+                    {data.amount || "NA"} Birr
                   </Title>
                 </Card>
               </Col>

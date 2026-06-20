@@ -144,7 +144,9 @@ export default function VoilationTable({ notificationReportId }) {
     setReportId(record.key);
   };
   const canPenalize =
-    userData.roles === "officer" || userData.roles === "admin";
+    userData.roles === "officer" ||
+    userData.roles === "admin" ||
+    userData.roles === "manager";
   const isStatus = (record) => {
     return record === "paid" || record === "punished";
   };

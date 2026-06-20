@@ -15,6 +15,7 @@ import getUserID, { requireRole } from "../middleware/middleware.js";
 // Define routes and link to controller functions
 const PenalityRouter = express.Router();
 
+PenalityRouter.get("/penality_view/:penalityId", getPenalityById);
 PenalityRouter.get(
   "/getPenalityByReport/:reportId",
   getUserID,

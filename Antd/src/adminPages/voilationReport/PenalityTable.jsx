@@ -27,7 +27,7 @@ import { penalityServices } from "../../admin/common/makeServices";
 import axios from "axios";
 import "../../admin/css/AdminPage.css";
 import "../../admin/css/TableCSS.css";
-import PrintablePenality from "./PrintablePenality.jsx";
+// import PrintablePenality from "./PrintablePenality.jsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { AppContext } from "../../context/AppContext.jsx";
@@ -241,7 +241,15 @@ export default function PenalityTable({ reportId }) {
                     fontSize: "12px",
                     height: "12px",
                   }}
-                  onClick={() => onPrintPenality(record)}
+                  onClick={
+                    () =>
+                      window.open(
+                        `/penality_view/${record._id}`,
+                        "_blank",
+                        "noopener,noreferrer",
+                      )
+                    // onPrintPenality(record)
+                  }
                 />
               </Tooltip>
 
@@ -344,7 +352,7 @@ export default function PenalityTable({ reportId }) {
         footer={null}
         width={400}
       >
-        <PrintablePenality penality={printPenality} />
+        {/* <PrintablePenality penality={printPenality} /> */}
 
         {/* <div style={{ textAlign: "center", marginTop: 16 }}>
           <Button type="primary" onClick={() => window.print()}>
