@@ -34,6 +34,11 @@ const reportSchema = new mongoose.Schema(
       enum: ["claimed", "opened", "punished", "completed"],
       default: "claimed",
     },
+    location: {
+      latitude: Number,
+      longitude: Number,
+      accuracy: Number,
+    },
   },
   { timestamps: true },
 );

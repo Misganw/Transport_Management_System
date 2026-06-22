@@ -41,6 +41,7 @@ const list = async (req, res) => {
     }
 
     const Passengers = await Passenger.find(qry)
+      .sort({ createdAt: -1 })
       .populate({ path: "companyId", select: "companyName" })
       .populate({ path: "userId", select: "name" });
     res.json(Passengers);

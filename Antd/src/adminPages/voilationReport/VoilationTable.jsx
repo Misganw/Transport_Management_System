@@ -1,5 +1,5 @@
 // src/modules/employees/employeesTable.jsx
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import DynamicTable from "../../admin/common/DynamicTable";
 // import { makeService } from "../../admin/common/services";
 import { AppContext } from "../../context/AppContext.jsx";
@@ -22,6 +22,7 @@ import {
   RedoOutlined,
   PlusCircleOutlined,
   PlusOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
@@ -40,7 +41,7 @@ import VoilationForm from "./VoilationForm.jsx";
 import PenalityModal from "./penalityModal.jsx";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
-
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 // ....... END OF IMPORTING .......
 
 // const service = makeService("employees");
@@ -152,6 +153,53 @@ export default function VoilationTable({ notificationReportId }) {
   };
 
   const navigate = useNavigate();
+
+  const mapRef = useRef(null);
+  const [mapVisible, setMapVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
+  // ===========================
+  // ADD startTracking HERE
+  // ===========================
+  const startTracking = (report_Id) => {
+    watchRef.current = navigator.geolocation.watchPosition(
+      async (position) => {
+        try {
+          await axios.post(backendURL + "/tracking", {
+            report_Id,
+
+            latitude: position.coords.latitude,
+
+            longitude: position.coords.longitude,
+
+            accuracy: position.coords.accuracy,
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      },
+
+      console.error,
+
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000,
+      },
+    );
+  };
+
+  // ===========================
+  // ADD stopTracking HERE
+  // ===========================
+  const stopTracking = () => {
+    if (watchRef.current) {
+      navigator.geolocation.clearWatch(watchRef.current);
+
+      watchRef.current = null;
+    }
+  };
+
   return (
     <>
       <DynamicTable
@@ -236,6 +284,31 @@ export default function VoilationTable({ notificationReportId }) {
                       setPenalityReportId(record.key);
                     }}
                     icon={<EyeOutlined />}
+                  />
+                </Tooltip>
+                <Tooltip title="View Violation Location">
+                  <Button
+                    type="link"
+                    size="small"
+                    style={{
+                      alignItems: "center",
+                      fontSize: "12px",
+                      height: "12px",
+                    }}
+                    icon={<EnvironmentOutlined />}
+                    onClick={() =>
+                      window.open(
+                        `https://www.google.com/maps?q=${record.raw.location?.latitude},${record.raw.location?.longitude}`,
+                        "_blank",
+                      )
+                    }
+                    // onClick={() => {
+                    //   setSelectedLocation(record.location);
+                    //   setMapVisible(true);
+                    // }}
+                    disabled={
+                      !record.location?.latitude || !record.location?.longitude
+                    }
                   />
                 </Tooltip>
               </Space>
@@ -332,6 +405,40 @@ export default function VoilationTable({ notificationReportId }) {
       {penality && (
         <PenalityModal report={penality} onClose={() => setPenality(null)} />
       )}
+
+      <Modal
+        title="Violation Location"
+        open={mapVisible}
+        footer={null}
+        width={800}
+        onCancel={() => setMapVisible(false)}
+        afterOpenChange={(open) => {
+          if (open && mapRef.current) {
+            setTimeout(() => {
+              mapRef.current.invalidateSize();
+            }, 300);
+          }
+        }}
+      >
+        {selectedLocation && (
+          <MapContainer
+            center={[selectedLocation.latitude, selectedLocation.longitude]}
+            zoom={16}
+            style={{ height: "500px", width: "100%" }}
+            whenCreated={(map) => {
+              mapRef.current = map;
+            }}
+          >
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+            <Marker
+              position={[selectedLocation.latitude, selectedLocation.longitude]}
+            >
+              <Popup>Violation reported here</Popup>
+            </Marker>
+          </MapContainer>
+        )}
+      </Modal>
     </>
   );
 }

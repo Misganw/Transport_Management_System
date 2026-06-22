@@ -37,6 +37,7 @@ const list = async (req, res) => {
       userId: user.id || user._id,
       ...filter,
     })
+      .sort({ createdAt: -1 })
       .populate({ path: "companyId", select: "companyName" })
       .populate({ path: "userId", select: "name" })
       .populate({

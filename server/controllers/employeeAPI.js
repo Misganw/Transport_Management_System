@@ -23,7 +23,7 @@ const list = async (req, res) => {
         }
       : {};
 
-    const Employees = await Employee.find(query);
+    const Employees = await Employee.find(query).sort({ createdAt: -1 });
     res.json(Employees);
   } catch (error) {
     res.status(500).json({ message: "Error getting Employee List" });
@@ -89,7 +89,7 @@ const update = async (req, res) => {
     const updated = await Employee.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
     res.json(updated);
   } catch (error) {
@@ -125,7 +125,7 @@ const getEmployeesByCompany = async (req, res) => {
         age: 1,
         gender: 1,
         profileImage: 1,
-      } // only what frontend needs
+      }, // only what frontend needs
     );
 
     const result = employees.map((e) => ({

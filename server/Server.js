@@ -32,6 +32,7 @@ import RenalityRouter from "./routs/penalityRouts.js";
 import reportNotification from "./routs/reportNotificationRout.js";
 import DriverRouter from "./routs/driverRouts.js";
 import TarrifRouter from "./routs/tarrifRouts.js";
+import trackingRouter from "./routs/gpsTrackingRouts.js";
 
 //......import Rout.....
 
@@ -119,10 +120,28 @@ const io = new Server(server, {
 });
 
 /* ----------------- SOCKET CONNECTION ----------------- */
+// io.on("connection", (socket) => {
+//   console.log("User connected:", socket.id);
+//   socket.on("disconnect", () => {
+//     console.log("User disconnected:", socket.id);
+//   });
+// });
+
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("Connected:", socket.id);
+
+  socket.on("joinReportRoom", (report_Id) => {
+    socket.join(report_Id);
+
+    console.log(`${socket.id} joined ${report_Id}`);
+  });
+
+  socket.on("leaveReportRoom", (report_Id) => {
+    socket.leave(report_Id);
+  });
+
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    console.log("Disconnected");
   });
 });
 
@@ -176,6 +195,7 @@ app.use("/cars", getUserID, commonRouter(carAPI, permissions.cars)); //car route
 app.use("/", reportNotification); //report notification routes
 app.use("/", DriverRouter); // driver routes
 app.use("/", TarrifRouter); //tarrif routes
+app.use("/", trackingRouter); // for tracking routs
 
 //employee
 app.post(

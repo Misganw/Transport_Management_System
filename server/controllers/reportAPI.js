@@ -14,6 +14,8 @@ import Notification from "../models/reportNotificationModel.js";
 import { populate } from "dotenv";
 import { get } from "mongoose";
 
+import LiveTracking from "../models/LiveTruckingModel.js";
+
 // GET /Report
 const list = async (req, res) => {
   try {
@@ -79,6 +81,7 @@ const list = async (req, res) => {
       ...filter,
       ...qry,
     })
+      .sort({ createdAt: -1 })
       .populate("companyId", "companyName")
       .populate("userId", "name roles")
       .populate("ruleID", "title")
@@ -176,9 +179,23 @@ const create = async (req, res) => {
       });
     }
 
+    await LiveTracking.create({
+      companyId: user.companyID,
+      report_Id: stt._id,
+      userId: user.id,
+
+      latitude: payload.location?.latitude,
+
+      longitude: payload.location?.longitude,
+
+      accuracy: payload.location?.accuracy,
+
+      isActive: true,
+    });
+
     res.json(stt);
   } catch (error) {
-    console.error("Error creating Report:", error);
+    console.log("Error creating Report:", error);
     res.status(500).json({ message: "Error creating Report" });
   }
 };

@@ -31,7 +31,7 @@ const list = async (req, res) => {
           ],
         }
       : {};
-    const Drivers = await Driver.find(query).populate({
+    const Drivers = await Driver.find(query).sort({ createdAt: -1 }).populate({
       path: "carId",
       select: "model type level plateNumber",
     });

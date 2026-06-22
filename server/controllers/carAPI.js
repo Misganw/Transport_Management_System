@@ -34,6 +34,7 @@ const list = async (req, res) => {
       ownerId: { $in: ownerIds },
       ...filter,
     })
+      .sort({ createdAt: -1 })
       .populate("companyId", "companyName")
       .populate("ownerId", "fName lName");
     res.json(cars);

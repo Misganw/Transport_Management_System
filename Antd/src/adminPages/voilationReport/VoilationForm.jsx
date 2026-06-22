@@ -1,5 +1,5 @@
 // src/modules/Violations/ViolationForm.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DynamicForm from "../../admin/common/DynamicForm";
 import { Form } from "antd";
 import {
@@ -9,6 +9,7 @@ import {
 } from "../../admin/common/makeServices";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 
 export default function ViolationForm({
   initialValues = {},
@@ -144,12 +145,62 @@ export default function ViolationForm({
     },
   ];
 
+  /* ... Get Current location of reporter ... */
+  const getCurrentLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported"));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          });
+        },
+        (error) => reject(error),
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        },
+      );
+    });
+  };
+  /* ... Get Current location of reporter ... */
+
+  const handleSubmit = async (values) => {
+    try {
+      let location = null;
+
+      try {
+        location = await getCurrentLocation();
+      } catch (err) {
+        console.warn("Location unavailable:", err);
+      }
+
+      const payload = {
+        ...values,
+        location,
+      };
+
+      onFinish(payload);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const watchRef = useRef(null);
+
   return (
     <DynamicForm
       form={form}
       fields={violationFields}
       initialValues={initialValues}
-      onFinish={onFinish}
+      onFinish={handleSubmit}
       onCancel={onCancel}
     />
   );

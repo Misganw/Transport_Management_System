@@ -51,6 +51,7 @@ const list = async (req, res) => {
       qry.userId = user.id;
     }
     const Tickets = await Ticket.find(qry)
+      .sort({ createdAt: -1 })
       .populate({ path: "companyId", select: "companyName" })
       .populate({ path: "userId", select: "name" })
       .populate({

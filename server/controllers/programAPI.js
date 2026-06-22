@@ -65,6 +65,7 @@ const list = async (req, res) => {
       ...filter,
       ...roleCondition,
     })
+      .sort({ createdAt: -1 })
       .populate({ path: "routId", select: "departure arrival" })
       .populate({ path: "carId", select: "type level NoofSeats plateNumber" })
       .populate({ path: "companyId", select: "companyName companyLogo" });

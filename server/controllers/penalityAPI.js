@@ -98,6 +98,7 @@ const remove = async (req, res) => {
 export const getPenalityById = async (req, res) => {
   try {
     const penality = await Penality.findById(req.params.penalityId)
+      .sort({ createdAt: -1 })
       .populate({ path: "companyId", select: "companyName" })
       .populate({
         path: "driverId",

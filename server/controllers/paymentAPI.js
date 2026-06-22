@@ -7,7 +7,7 @@ const list = async (req, res) => {
     const search = req.query.search || "";
     const Payments = await Payment.find({
       model: { $regex: search, $options: "i" },
-    });
+    }).sort({ createdAt: -1 });
     res.json(Payments);
   } catch (error) {
     res.status(500).json({ message: "Error getting Payments List" });

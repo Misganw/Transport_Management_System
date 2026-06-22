@@ -25,7 +25,7 @@ const list = async (req, res) => {
           ],
         }
       : {};
-    const Owners = await Owner.find(query);
+    const Owners = await Owner.find(query).sort({ createdAt: -1 });
     res.json(Owners);
   } catch (error) {
     console.log(error);
