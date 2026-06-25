@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const liveTrackingSchema = new mongoose.Schema(
   {
-    comapnyId: { type: mongoose.Schema.Types.ObjectId, ref: "companies" },
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: "companies" },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",

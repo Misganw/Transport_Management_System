@@ -42,6 +42,7 @@ import PenalityModal from "./penalityModal.jsx";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { socket } from "../../admin/common/socket.js";
 // ....... END OF IMPORTING .......
 
 // const service = makeService("employees");
@@ -155,54 +156,18 @@ export default function VoilationTable({ notificationReportId }) {
   const navigate = useNavigate();
 
   const mapRef = useRef(null);
+  const watchRef = useRef(null);
   const [mapVisible, setMapVisible] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
-  // ===========================
-  // ADD startTracking HERE
-  // ===========================
-  const startTracking = (report_Id) => {
-    watchRef.current = navigator.geolocation.watchPosition(
-      async (position) => {
-        try {
-          await axios.post(backendURL + "/tracking", {
-            report_Id,
-
-            latitude: position.coords.latitude,
-
-            longitude: position.coords.longitude,
-
-            accuracy: position.coords.accuracy,
-          });
-        } catch (err) {
-          console.log(err);
-        }
-      },
-
-      console.error,
-
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 10000,
-      },
-    );
-  };
-
-  // ===========================
-  // ADD stopTracking HERE
-  // ===========================
-  const stopTracking = () => {
-    if (watchRef.current) {
-      navigator.geolocation.clearWatch(watchRef.current);
-
-      watchRef.current = null;
-    }
-  };
+  const [vehicleLocation, setVehicleLocation] = useState(null);
 
   return (
     <>
       <DynamicTable
+        tracking
+        // startTracking={startTracking}
+        // stopTracking={stopTracking}
         notificationReportId={notificationReportId}
         title="Reported Violations"
         resourceName="violations"
@@ -308,6 +273,21 @@ export default function VoilationTable({ notificationReportId }) {
                     // }}
                     disabled={
                       !record.location?.latitude || !record.location?.longitude
+                    }
+                  />
+                </Tooltip>
+                <Tooltip title="Live Tracking">
+                  <Button
+                    type="link"
+                    size="small"
+                    style={{
+                      alignItems: "center",
+                      fontSize: "12px",
+                      height: "12px",
+                    }}
+                    icon={<EnvironmentOutlined />}
+                    onClick={() =>
+                      window.open(`/tracking/${record.raw._id}`, "_blank")
                     }
                   />
                 </Tooltip>

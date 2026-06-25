@@ -28,6 +28,7 @@ import html2canvas from "html2canvas";
 import { io } from "socket.io-client";
 import { socket } from "./socket.js";
 import { AppContext } from "../../context/AppContext.jsx";
+import { useTracking } from "../../context/TrackingContext.jsx";
 
 // ....... end of import ........
 
@@ -44,6 +45,7 @@ export default function DynamicTable({
   hideCreate = false,
   hideEdit = false,
   hideAddTP = false,
+  tracking = true,
   deleteLabel = "Delete",
   onRestore,
   onRestoreMany,
@@ -58,6 +60,8 @@ export default function DynamicTable({
   canView,
   canRestore,
   notificationReportId,
+  // startTracking,
+  // stopTracking,
 }) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -74,6 +78,11 @@ export default function DynamicTable({
   const [ViewTickets, setViewTickets] = useState(null);
 
   const { userData } = useContext(AppContext);
+
+  const { startTracking, stopTracking } = useTracking();
+
+  console.log("DynamicTable startTracking:", startTracking);
+  console.log("DynamicTable tracking:", tracking);
 
   // useEffect(() => {
   //   if (notificationReportId) {
@@ -567,7 +576,36 @@ export default function DynamicTable({
             <FormComponent
               onFinish={async (vals) => {
                 try {
-                  await service.create(vals);
+                  // if (tracking) {
+                  //   console.log("BEFORE CREATE");
+
+                  //   const report = await service.create(vals);
+
+                  //   console.log("CREATED REPORT:", report.data);
+                  //   console.log("CALLING START TRACKING");
+
+                  //   startTracking(report.data._id);
+                  // }
+                  if (tracking) {
+                    console.log("STEP 1: tracking entered");
+                    try {
+                      const report = await service.create(vals);
+                      console.log("STEP 2: report created");
+                      console.log(report);
+                      console.log("STEP 3: report id");
+
+                      console.log(report?.data?._id);
+                      console.log("STEP 4: calling startTracking");
+                      startTracking(report.data._id);
+
+                      console.log("STEP 5: startTracking returned");
+                    } catch (error) {
+                      console.log("CREATE ERROR:", error);
+                    }
+                  } else {
+                    await service.create(vals);
+                  }
+
                   // message.success("Created");
                   toast.success("Data Created");
                   setIsAddOpen(false);

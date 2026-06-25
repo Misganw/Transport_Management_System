@@ -46,9 +46,19 @@ export const updateLocation = async (req, res) => {
         new: true,
         upsert: true,
       },
+      {
+        withCredentials: true,
+      },
     );
     const io = req.app.get("io");
-    io.to(req.body.report_Id).emit("vehicleLocation", tracking);
+    // console.log("EMITTING LOCATION:", tracking);
+    // io.to(req.body.report_Id).emit("vehicleLocation", tracking);
+
+    console.log("REPORT ROOM:", report_Id);
+
+    console.log("EMITTING LOCATION:", tracking);
+
+    io.to(report_Id).emit("vehicleLocation", tracking);
 
     res.json(tracking);
   } catch (error) {
@@ -58,6 +68,7 @@ export const updateLocation = async (req, res) => {
 };
 
 export const getTracking = async (req, res) => {
+  // console.log("Looking for:", req.params.report_Id);
   console.log("URL:", req.originalUrl);
   console.log("PARAMS:", req.params);
   try {
@@ -65,6 +76,7 @@ export const getTracking = async (req, res) => {
       report_Id: req.params.report_Id,
       isActive: true,
     });
+    // console.log("Found:", tracking);
 
     res.json(tracking);
   } catch (error) {
@@ -85,7 +97,7 @@ export const stopTracking = async (req, res) => {
         isActive: false,
       },
     );
-
+    const io = req.app.get("io");
     io.to(req.params.report_Id).emit("trackingStopped");
 
     res.json({

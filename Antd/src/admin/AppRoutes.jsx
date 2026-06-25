@@ -35,6 +35,8 @@ import PaymentSuccess from "./success/PaymentSuccess.jsx";
 import VoilationTable from "../adminPages/voilationReport/VoilationTable.jsx";
 import ReportView from "../adminPages/voilationReport/ReportView.jsx";
 import PenalityView from "../adminPages/voilationReport/PenalityView.jsx";
+// import LiveTrackingPage from "../adminPages/voilationReport/LiveTrackingPage.jsx";
+import LiveTrackingPage from "../adminPages/voilationReport/LiveTrackingPageLeaflet.jsx";
 
 //... End of Imports
 function AppRoutes() {
@@ -75,6 +77,8 @@ function AppRoutes() {
         <Route path="/google-success" element={<GoogleSuccess />} />
         <Route path="/payment_success" element={<PaymentSuccess />} />
         <Route path="/violations" element={<VoilationTable />} />
+        <Route path="/tracking/:report_Id" element={<LiveTrackingPage />} />
+
         <Route
           path="/voilationReports/report_view/:reportId"
           element={<ReportView />}

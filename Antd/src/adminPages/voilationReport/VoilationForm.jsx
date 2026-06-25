@@ -10,6 +10,7 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { socket } from "../../admin/common/socket.js";
 
 export default function ViolationForm({
   initialValues = {},
@@ -145,7 +146,7 @@ export default function ViolationForm({
     },
   ];
 
-  /* ... Get Current location of reporter ... */
+  /* ... Get Current location of reporter to add in report table... */
   const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {

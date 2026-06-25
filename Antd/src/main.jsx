@@ -6,13 +6,16 @@ import { BrowserRouter } from "react-router-dom";
 import { AppContextProvider } from "./context/AppContext.jsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
+import { TrackingProvider } from "./context/TrackingContext.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     {/* <React.StrictMode> */}
     <AppContextProvider>
-      <App />
+      <TrackingProvider>
+        <App />
+      </TrackingProvider>
     </AppContextProvider>
     {/* </React.StrictMode> */}
-  </BrowserRouter>
+  </BrowserRouter>,
 );
