@@ -2,6 +2,7 @@ import express from "express";
 import Penality from "../models/penalityModel.js";
 import Company from "../models/companyModel.js";
 import Report from "../models/reportsModel.js";
+import LiveTracking from "../models/LiveTruckingModel.js";
 import Stripe from "stripe";
 import { populate } from "dotenv";
 import axios from "axios";
@@ -66,6 +67,19 @@ const create = async (req, res) => {
     await Report.findByIdAndUpdate(payload.reportId, {
       Status: "punished",
     });
+
+    await LiveTracking.findOneAndUpdate(
+      { report_Id: payload.reportId },
+      { isActive: false },
+    );
+
+    // Stop tracking
+    // ==========================
+    const io = req.app.get("io");
+    io.to(payload.reportId).emit("trackingStopped");
+    console.log("TRACKING STOPPED EVENT EMITTED:", payload.reportId);
+    // ==========================
+
     res.json(createPenality);
   } catch (error) {
     res.status(500).json({ message: "Error creating Penality" });

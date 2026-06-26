@@ -43,6 +43,7 @@ import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { socket } from "../../admin/common/socket.js";
+import { useTracking } from "../../context/TrackingContext.jsx";
 // ....... END OF IMPORTING .......
 
 // const service = makeService("employees");
@@ -108,6 +109,8 @@ const columnsViolation = [
 export default function VoilationTable({ notificationReportId }) {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
 
+  const { startTracking, stopTracking } = useTracking();
+
   // const location = useLocation();
   // const notificationReportId = location.state?.reportId;
 
@@ -153,14 +156,7 @@ export default function VoilationTable({ notificationReportId }) {
     return record === "paid" || record === "punished";
   };
 
-  const navigate = useNavigate();
-
-  const mapRef = useRef(null);
-  const watchRef = useRef(null);
-  const [mapVisible, setMapVisible] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-
-  const [vehicleLocation, setVehicleLocation] = useState(null);
+  // const navigate = useNavigate();
 
   return (
     <>
@@ -286,9 +282,13 @@ export default function VoilationTable({ notificationReportId }) {
                       height: "12px",
                     }}
                     icon={<EnvironmentOutlined />}
-                    onClick={() =>
-                      window.open(`/tracking/${record.raw._id}`, "_blank")
-                    }
+                    onClick={() => {
+                      if (record.raw.isActive !== false) {
+                        startTracking(record.raw._id);
+                      }
+
+                      window.open(`/tracking/${record.raw._id}`, "_blank");
+                    }}
                   />
                 </Tooltip>
               </Space>
@@ -383,42 +383,12 @@ export default function VoilationTable({ notificationReportId }) {
       />
 
       {penality && (
-        <PenalityModal report={penality} onClose={() => setPenality(null)} />
+        <PenalityModal
+          report={penality}
+          onClose={() => setPenality(null)}
+          stopTracking={stopTracking}
+        />
       )}
-
-      <Modal
-        title="Violation Location"
-        open={mapVisible}
-        footer={null}
-        width={800}
-        onCancel={() => setMapVisible(false)}
-        afterOpenChange={(open) => {
-          if (open && mapRef.current) {
-            setTimeout(() => {
-              mapRef.current.invalidateSize();
-            }, 300);
-          }
-        }}
-      >
-        {selectedLocation && (
-          <MapContainer
-            center={[selectedLocation.latitude, selectedLocation.longitude]}
-            zoom={16}
-            style={{ height: "500px", width: "100%" }}
-            whenCreated={(map) => {
-              mapRef.current = map;
-            }}
-          >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-            <Marker
-              position={[selectedLocation.latitude, selectedLocation.longitude]}
-            >
-              <Popup>Violation reported here</Popup>
-            </Marker>
-          </MapContainer>
-        )}
-      </Modal>
     </>
   );
 }

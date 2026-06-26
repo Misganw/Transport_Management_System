@@ -50,13 +50,15 @@ export const updateLocation = async (req, res) => {
         withCredentials: true,
       },
     );
+    console.log("SERVER RECEIVED:", Date.now());
+
     const io = req.app.get("io");
     // console.log("EMITTING LOCATION:", tracking);
     // io.to(req.body.report_Id).emit("vehicleLocation", tracking);
 
     console.log("REPORT ROOM:", report_Id);
 
-    console.log("EMITTING LOCATION:", tracking);
+    // console.log("EMITTING LOCATION:", tracking);
 
     io.to(report_Id).emit("vehicleLocation", tracking);
 
@@ -69,13 +71,22 @@ export const updateLocation = async (req, res) => {
 
 export const getTracking = async (req, res) => {
   // console.log("Looking for:", req.params.report_Id);
-  console.log("URL:", req.originalUrl);
-  console.log("PARAMS:", req.params);
+  // console.log("URL:", req.originalUrl);
+  // console.log("PARAMS:", req.params);
   try {
     const tracking = await LiveTracking.findOne({
       report_Id: req.params.report_Id,
       isActive: true,
-    });
+    })
+      .populate({ path: "companyId", select: "comapnyName" })
+      .populate({ path: "userId", select: "name" })
+      .populate({
+        path: "report_Id",
+        populate: [
+          { path: "ticketId", select: "name" },
+          { path: "officerAssignmentId", select: "name" },
+        ],
+      });
     // console.log("Found:", tracking);
 
     res.json(tracking);

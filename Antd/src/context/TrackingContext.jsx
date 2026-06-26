@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useRef, useEffect } from "react";
 import axios from "axios";
+import { socket } from "../admin/common/socket.js";
 
 const TrackingContext = createContext();
 
@@ -9,6 +10,7 @@ export const TrackingProvider = ({ children }) => {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
 
   const startTracking = (report_Id) => {
+    console.log("MAP RECEIVED:", Date.now());
     const reportId = localStorage.setItem("activeTrackingReport", report_Id);
     console.log("GLOBAL TRACKING STARTED:", report_Id);
 
@@ -16,6 +18,7 @@ export const TrackingProvider = ({ children }) => {
       navigator.geolocation.clearWatch(watchIdRef.current);
     }
 
+    let lastSent = 0;
     watchIdRef.current = navigator.geolocation.watchPosition(
       async (position) => {
         try {
@@ -25,6 +28,10 @@ export const TrackingProvider = ({ children }) => {
 
           // console.log("GPS UPDATE:", latitude, longitude);
           // console.log("URL:", `${backendURL}/tracking/${report_Id}`);
+
+          const now = Date.now();
+          if (now - lastSent < 1000) return;
+          lastSent = now;
 
           await axios.put(`${backendURL}/tracking/${report_Id}`, {
             latitude,
@@ -49,7 +56,7 @@ export const TrackingProvider = ({ children }) => {
     );
   };
 
-  const stopTracking = () => {
+  const stopTracking = (report_Id) => {
     localStorage.removeItem("activeTrackingReport", report_Id);
     if (watchIdRef.current) {
       navigator.geolocation.clearWatch(watchIdRef.current);
@@ -65,6 +72,18 @@ export const TrackingProvider = ({ children }) => {
     if (reportId) {
       startTracking(reportId);
     }
+  }, []);
+
+  useEffect(() => {
+    socket.on("trackingStopped", () => {
+      console.log("TRACKING STOPPED BY OFFICER");
+
+      stopTracking();
+    });
+
+    return () => {
+      socket.off("trackingStopped");
+    };
   }, []);
 
   return (

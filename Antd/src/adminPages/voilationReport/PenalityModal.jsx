@@ -11,7 +11,7 @@ import {
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function PenalityModal({ report, onClose }) {
+export default function PenalityModal({ report, stopTracking, onClose }) {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
   const [voilationReport, setVoilationReport] = useState([]);
@@ -73,6 +73,9 @@ export default function PenalityModal({ report, onClose }) {
       toast.success("Penality Saved");
       queryClient.invalidateQueries(["reports"]);
       queryClient.invalidateQueries(["penalities"]);
+
+      stopTracking(values.reportId);
+
       onClose();
     } catch (e) {
       console.log(e);

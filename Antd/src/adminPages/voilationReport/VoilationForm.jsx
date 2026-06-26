@@ -30,9 +30,8 @@ export default function ViolationForm({
     const fetchTickets = async () => {
       try {
         const res = await axios.get(backendURL + "/voilationReports");
-
         const options = res.data.map((t) => ({
-          label: `${t.passengerName} | ${t.reservationCode} | ${t.programId?.routId?.departure} → ${t.programId?.routId?.arrival}`,
+          label: `${t.createdAt.split("T")[0]}-${t.passengerName} | ${t.reservationCode} | ${t.programId?.routId?.departure} → ${t.programId?.routId?.arrival}`,
           value: t._id,
         }));
 

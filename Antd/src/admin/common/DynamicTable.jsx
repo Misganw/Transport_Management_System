@@ -81,8 +81,8 @@ export default function DynamicTable({
 
   const { startTracking, stopTracking } = useTracking();
 
-  console.log("DynamicTable startTracking:", startTracking);
-  console.log("DynamicTable tracking:", tracking);
+  // console.log("DynamicTable startTracking:", startTracking);
+  // console.log("DynamicTable tracking:", tracking);
 
   // useEffect(() => {
   //   if (notificationReportId) {
@@ -576,16 +576,6 @@ export default function DynamicTable({
             <FormComponent
               onFinish={async (vals) => {
                 try {
-                  // if (tracking) {
-                  //   console.log("BEFORE CREATE");
-
-                  //   const report = await service.create(vals);
-
-                  //   console.log("CREATED REPORT:", report.data);
-                  //   console.log("CALLING START TRACKING");
-
-                  //   startTracking(report.data._id);
-                  // }
                   if (tracking) {
                     console.log("STEP 1: tracking entered");
                     try {

@@ -25,6 +25,8 @@ export default function LiveTrackingPageLeaflet() {
     // console.log("LiveTrackingPage loaded");
     // console.log("REPORT ID:", report_Id);
 
+    console.log("GPS UPDATE:", Date.now());
+
     socket.emit("joinReportRoom", report_Id);
     // console.log("JOIN ROOM:", report_Id);
 
@@ -41,8 +43,12 @@ export default function LiveTrackingPageLeaflet() {
 
     socket.on("vehicleLocation", (data) => {
       // console.log("LIVE UPDATE:", data);
-
       setLocation(data);
+    });
+
+    socket.on("trackingStopped", () => {
+      alert("Tracking stopped by traffic police");
+      setLocation(null);
     });
 
     return () => {
