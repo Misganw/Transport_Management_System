@@ -4,6 +4,9 @@ import { useParams } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { socket } from "../../admin/common/socket.js";
 import "leaflet/dist/leaflet.css";
+import { Typography } from "antd";
+
+const { Text, Title } = Typography;
 
 // automatically move map when GPS changes
 function ChangeView({ center }) {
@@ -20,26 +23,31 @@ export default function LiveTrackingPageLeaflet() {
   const { report_Id } = useParams();
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [location, setLocation] = useState(null);
+  const [RID, setRID] = useState(null);
 
   useEffect(() => {
     // console.log("LiveTrackingPage loaded");
     // console.log("REPORT ID:", report_Id);
-
-    console.log("GPS UPDATE:", Date.now());
+    // console.log("GPS UPDATE:", Date.now());
 
     socket.emit("joinReportRoom", report_Id);
     // console.log("JOIN ROOM:", report_Id);
 
-    axios
-      .get(`${backendURL}/tracking/${report_Id}`)
-      .then((res) => {
-        // console.log("INITIAL TRACKING:", res.data);
+    const fetchTracking = async () => {
+      // console.log("fetchTracking started");
+      try {
+        console.log("Sending request...");
+        const res = await axios.get(`${backendURL}/tracking/${report_Id}`);
+        // console.log("Request completed");
 
-        setLocation(res.data);
-      })
-      .catch((err) => {
+        // console.log("INITIAL TRACKING:", res.data);
+        setRID(res.data.report_Id);
+        // setLocation(res.data);
+      } catch (err) {
         console.log(err);
-      });
+      }
+    };
+    fetchTracking();
 
     socket.on("vehicleLocation", (data) => {
       // console.log("LIVE UPDATE:", data);
@@ -53,7 +61,6 @@ export default function LiveTrackingPageLeaflet() {
 
     return () => {
       socket.emit("leaveReportRoom", report_Id);
-
       socket.off("vehicleLocation");
     };
   }, [report_Id]);
@@ -63,7 +70,8 @@ export default function LiveTrackingPageLeaflet() {
   }
 
   const position = [location.latitude, location.longitude];
-
+  console.log("GPS data (Latitude)", location.latitude);
+  // console.log("Report ID", RID);
   return (
     <div
       style={{
@@ -91,13 +99,24 @@ export default function LiveTrackingPageLeaflet() {
 
         <Marker position={position}>
           <Popup>
-            Live Vehicle Location
-            <br />
-            Lat:
+            <bold>Live Vehicle Location</bold>
+            <hr style={{ marginTop: "0px", paddingTop: "0px" }} />
+            {/* Lat:
             {location.latitude}
             <br />
             Lng:
             {location.longitude}
+            <br /> */}
+            <Text style={{ color: "brown", size: "small" }}>Driver:</Text>{" "}
+            {RID.ticketId?.programId?.driverId?.fName}{" "}
+            {RID.ticketId?.programId?.driverId?.mName} -{" "}
+            {RID.ticketId?.programId?.driverId?.phone}
+            <br />
+            <Text style={{ color: "green", size: "small" }}>Car:</Text>{" "}
+            {RID.ticketId?.programId?.carId?.type}{" "}
+            {RID.ticketId?.programId?.carId?.level} -{" "}
+            {RID.ticketId?.programId?.carId?.plateNumber}
+            <br />
           </Popup>
         </Marker>
       </MapContainer>

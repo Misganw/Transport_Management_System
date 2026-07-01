@@ -50,13 +50,13 @@ export const updateLocation = async (req, res) => {
         withCredentials: true,
       },
     );
-    console.log("SERVER RECEIVED:", Date.now());
+    // console.log("SERVER RECEIVED:", Date.now());
 
     const io = req.app.get("io");
     // console.log("EMITTING LOCATION:", tracking);
     // io.to(req.body.report_Id).emit("vehicleLocation", tracking);
 
-    console.log("REPORT ROOM:", report_Id);
+    // console.log("REPORT ROOM:", report_Id);
 
     // console.log("EMITTING LOCATION:", tracking);
 
@@ -83,8 +83,20 @@ export const getTracking = async (req, res) => {
       .populate({
         path: "report_Id",
         populate: [
-          { path: "ticketId", select: "name" },
-          { path: "officerAssignmentId", select: "name" },
+          {
+            path: "ticketId",
+            populate: {
+              path: "programId",
+              populate: [
+                { path: "driverId", select: "fName mName phone CDL" },
+                { path: "carId", select: "model level type plateNumber" },
+              ],
+            },
+          },
+          {
+            path: "officerAssignmentId",
+            populate: { path: "trafficOfficerId", select: "fName mName phone" },
+          },
         ],
       });
     // console.log("Found:", tracking);

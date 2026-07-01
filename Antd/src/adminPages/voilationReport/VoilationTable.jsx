@@ -247,7 +247,16 @@ export default function VoilationTable({ notificationReportId }) {
                     icon={<EyeOutlined />}
                   />
                 </Tooltip>
-                <Tooltip title="View Violation Location">
+                <Tooltip
+                  title={
+                    !record.location?.latitude || !record.location?.longitude
+                      ? "Location Not detected"
+                      : record.raw.Status === "punished" ||
+                          record.raw.Status === "paid"
+                        ? "Already Tracked Before"
+                        : "View Violation Report Location"
+                  }
+                >
                   <Button
                     type="link"
                     size="small"
@@ -268,11 +277,23 @@ export default function VoilationTable({ notificationReportId }) {
                     //   setMapVisible(true);
                     // }}
                     disabled={
-                      !record.location?.latitude || !record.location?.longitude
+                      !record.location?.latitude ||
+                      !record.location?.longitude ||
+                      record.raw.Status === "punished" ||
+                      record.raw.Status === "paid"
                     }
                   />
                 </Tooltip>
-                <Tooltip title="Live Tracking">
+                <Tooltip
+                  title={
+                    !record.location?.latitude || !record.location?.longitude
+                      ? "Location Not detected"
+                      : record.raw.Status === "punished" ||
+                          record.raw.Status === "paid"
+                        ? "Already Tracked Before"
+                        : "Go to Live Tracking"
+                  }
+                >
                   <Button
                     type="link"
                     size="small"
@@ -289,6 +310,12 @@ export default function VoilationTable({ notificationReportId }) {
 
                       window.open(`/tracking/${record.raw._id}`, "_blank");
                     }}
+                    disabled={
+                      !record.location?.latitude ||
+                      !record.location?.longitude ||
+                      record.raw.Status === "punished" ||
+                      record.raw.Status === "paid"
+                    }
                   />
                 </Tooltip>
               </Space>
