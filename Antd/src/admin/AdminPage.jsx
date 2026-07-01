@@ -34,7 +34,7 @@ import "./css/AdminPage.css";
 import AdminpageFooter from "./AdminpageFooter";
 import AdminpageHeader from "./AdminpageHeader";
 import AdminpageSidebar from "./AdminpageSidebar";
-import Analytics from "./Analytics";
+// import Analytics from "./Analytics";
 import Settings from "./Settings";
 import Reports from "./Reports";
 import Notifications from "./Notifications";
@@ -59,6 +59,9 @@ import TrafficPoliceTable from "../adminPages/adminTrafficPolice/TrafficPoliceTa
 import AssignPoliceTable from "../adminPages/adminTrafficPolice/AssignPoliceTable.jsx";
 import SubroutTable from "../adminPages/routs/subRoutTable.jsx";
 import VoilationTable from "../adminPages/voilationReport/VoilationTable.jsx";
+
+import Analytics from "./analytics/Analytics.jsx";
+
 import { useContext } from "react";
 import { AppContext } from "../context/AppContext.jsx";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -121,6 +124,11 @@ function AdminPage() {
           "programs",
           "rules",
           "voilationReport",
+          "countryState",
+          "zone",
+          "wereda",
+          "city",
+          "cars",
         ].includes(selectedMenu)
       ) {
         return <div>Access Denied!. Passenger role has limited access.</div>;
@@ -139,11 +147,42 @@ function AdminPage() {
           "police",
           "asignTpolices",
           "tickets",
+          "drivers",
+          "countryState",
+          "zone",
+          "wereda",
+          "city",
+          "cars",
         ].includes(selectedMenu)
       ) {
         return (
           <div>Access Denied!. Traffic Police role has limited access.</div>
         );
+      }
+    }
+
+    // If officer, restrict access
+    if (roles.includes("officer")) {
+      if (
+        ![
+          "routs",
+          "subrouts",
+          "reports",
+          "programs",
+          "rules",
+          "voilationReport",
+          "police",
+          "asignTpolices",
+          "tickets",
+          "drivers",
+          "countryState",
+          "zone",
+          "wereda",
+          "city",
+          "cars",
+        ].includes(selectedMenu)
+      ) {
+        return <div>Access Denied!. Coordinator role has limited access.</div>;
       }
     }
 
@@ -198,7 +237,7 @@ function AdminPage() {
       case "homecontent":
         return <AdminNewsUpload />;
       default:
-        return <UsersTable />;
+        return <Analytics />;
     }
   };
 

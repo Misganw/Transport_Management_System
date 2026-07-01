@@ -121,8 +121,8 @@ export default function VoilationTable({ notificationReportId }) {
     return roles.some((r) => allowedRoles.includes(r));
   };
   const canCreate = hasRole("admin", "manager", "coordinator", "passenger");
-  const canEdit = hasRole("admin", "manager", "coordinator", "officer");
-  const canDelete = hasRole("admin", "manager", "coordinator", "officer");
+  const canEdit = hasRole("admin", "manager", "coordinator");
+  const canDelete = hasRole("admin", "manager", "coordinator");
   const canView = hasRole(
     "admin",
     "manager",
@@ -130,7 +130,7 @@ export default function VoilationTable({ notificationReportId }) {
     "officer",
     "passeneger",
   );
-  const canRestore = hasRole("admin", "manager", "coordinator", "officer");
+  const canRestore = hasRole("admin", "manager", "coordinator");
   // ROLE Filteration for actions
 
   const [penality, setPenality] = useState(null);

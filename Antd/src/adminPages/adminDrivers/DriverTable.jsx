@@ -69,7 +69,13 @@ export default function DriverTable() {
   const canCreate = hasRole("admin", "manager");
   const canEdit = hasRole("admin", "manager");
   const canDelete = hasRole("admin", "manager");
-  const canView = hasRole("admin", "manager", "driver");
+  const canView = hasRole(
+    "admin",
+    "manager",
+    "driver",
+    "officer",
+    "coordinator",
+  );
   const canRestore = hasRole("admin", "manager");
   // ROLE Filteration for actions
   return (
