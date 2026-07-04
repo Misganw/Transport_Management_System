@@ -18,6 +18,7 @@ import {
   Input,
   Menu as AntMenu,
   Grid,
+  ConfigProvider,
 } from "antd";
 import {
   MenuUnfoldOutlined,
@@ -242,36 +243,66 @@ function AdminPage() {
   };
 
   return (
-    <Layout className="admin-layout">
-      {/* Header */}
-      <AdminpageHeader SidebarShow={show_Sidebar} switchIcon={showSidebar} />
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: "#005f73", // Automatically fixes primary buttons, badges, active hooks, checkboxes
+        },
+        components: {
+          Layout: {
+            headerBg: "#005f73", // Fixes header background
+            footerBg: "#005f73", // Fixes footer background
+          },
+          Menu: {
+            itemBg: "#ffffff", // Keeps default background clean for inline menu items
+            itemSelectedBg: "#e6f0f2", // Creates a light teal highlight blend for selected sub-items
+            itemSelectedColor: "#005f73",
+          },
+          Table: {
+            headerBg: "#005f73", // Fixes all nested data tables header backgrounds
+            headerColor: "#ffffff", // Text visibility over dark teal
+            headerSortHoverBg: "#004d5c",
+            headerSortActiveBg: "#004d5c",
+          },
+          Tabs: {
+            cardBg: "#f0f5f6", // Secondary background color for unselected tabs
+            itemActiveColor: "#005f73",
+            itemSelectedColor: "#005f73",
+          },
+        },
+      }}
+    >
+      <Layout className="admin-layout">
+        {/* Header */}
+        <AdminpageHeader SidebarShow={show_Sidebar} switchIcon={showSidebar} />
 
-      <Layout>
-        {/* Sidebar */}
-        <AdminpageSidebar
-          SidebarShow={showSidebar}
-          selectedMenu={selectedMenu}
-          onMenuSelect={setSelectedMenu}
-        />
-
-        {/* Content */}
         <Layout>
-          <Content
-            className={`admin-content ${showSidebar ? "" : "sidebar-hidden"}`}
-          >
-            <Row gutter={[16, 16]}>
-              <Col span={24}>
-                {/* <UsersTable /> */}
-                {renderContent()}
-              </Col>
-            </Row>
-          </Content>
+          {/* Sidebar */}
+          <AdminpageSidebar
+            SidebarShow={showSidebar}
+            selectedMenu={selectedMenu}
+            onMenuSelect={setSelectedMenu}
+          />
 
-          {/* Footer */}
-          <AdminpageFooter SidebarShow={showSidebar} />
+          {/* Content */}
+          <Layout>
+            <Content
+              className={`admin-content ${showSidebar ? "" : "sidebar-hidden"}`}
+            >
+              <Row gutter={[16, 16]}>
+                <Col span={24}>
+                  {/* <UsersTable /> */}
+                  {renderContent()}
+                </Col>
+              </Row>
+            </Content>
+
+            {/* Footer */}
+            <AdminpageFooter SidebarShow={showSidebar} />
+          </Layout>
         </Layout>
       </Layout>
-    </Layout>
+    </ConfigProvider>
   );
 }
 

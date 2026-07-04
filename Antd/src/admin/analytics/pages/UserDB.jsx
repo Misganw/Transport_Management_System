@@ -20,6 +20,9 @@ import {
   SafetyCertificateOutlined,
   RiseOutlined,
 } from "@ant-design/icons";
+import KPIWidget from "../charts/KPIWidget.jsx";
+import StatisticCard from "../charts/StatisticCard.jsx";
+import PieChart from "../charts/PieChart.jsx";
 
 const { Title, Text } = Typography;
 
@@ -110,6 +113,28 @@ const UserDashboard = () => {
 
   //-------------------------------------
 
+  const userData = [
+    {
+      value: 5400,
+      name: "Passengers",
+    },
+
+    {
+      value: 420,
+      name: "Drivers",
+    },
+
+    {
+      value: 90,
+      name: "Officers",
+    },
+
+    {
+      value: 20,
+      name: "Admins",
+    },
+  ];
+
   return (
     <div>
       <Title level={3}>User Analytics</Title>
@@ -168,34 +193,7 @@ const UserDashboard = () => {
 
       <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
         <Col xs={24} lg={12}>
-          <Card title="User Distribution">
-            <List>
-              <List.Item>
-                <Text>Passengers</Text>
-                <Progress percent={84} />
-              </List.Item>
-
-              <List.Item>
-                <Text>Drivers</Text>
-                <Progress percent={10} status="active" />
-              </List.Item>
-
-              <List.Item>
-                <Text>Officers</Text>
-                <Progress percent={3} />
-              </List.Item>
-
-              <List.Item>
-                <Text>Coordinators</Text>
-                <Progress percent={2} />
-              </List.Item>
-
-              <List.Item>
-                <Text>Administrators</Text>
-                <Progress percent={1} />
-              </List.Item>
-            </List>
-          </Card>
+          <PieChart title="System Users" data={userData} />
         </Col>
 
         <Col xs={24} lg={12}>
@@ -227,6 +225,7 @@ const UserDashboard = () => {
                   dataIndex: "users",
                 },
               ]}
+              rowKey={(record) => record._id || record.id}
             />
           </Card>
         </Col>
@@ -243,6 +242,7 @@ const UserDashboard = () => {
               pagination={{ pageSize: 5 }}
               columns={columns}
               dataSource={recentUsers}
+              rowKey={(record) => record._id || record.id}
             />
           </Card>
         </Col>

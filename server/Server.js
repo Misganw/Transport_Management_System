@@ -33,6 +33,7 @@ import reportNotification from "./routs/reportNotificationRout.js";
 import DriverRouter from "./routs/driverRouts.js";
 import TarrifRouter from "./routs/tarrifRouts.js";
 import trackingRouter from "./routs/gpsTrackingRouts.js";
+import AnalyticsRouter from "./routs/AnalyticsRout.js";
 
 //......import Rout.....
 
@@ -85,6 +86,14 @@ const app = express();
 const port = process.env.PORT || 5000;
 connectDB();
 
+const allowFrontend = ["http://localhost:5173"];
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:5174"],
+    credentials: true,
+  }),
+);
+
 // .......... stripe web hook .........
 app.post(
   "/webhook/stripe",
@@ -94,20 +103,10 @@ app.post(
 
 // app.post("/webhook/chapa", express.json(), chapaWebhook);
 app.route("/webhook/chapa").get(chapaWebhook).post(chapaWebhook);
-// app.get("/webhook/chapa", express.json(), chapaWebhook);
 // .......... stripe web hook .........
 
 app.use(express.json());
 app.use(cookieParser());
-const allowFrontend = ["http://localhost:5173"];
-// app.use(cors({ origin: "http://localhost:5173", credentials: true }));
-// app.use(cors({ origin: "*", credentials: true })); // WARNING: Not recommended for production.
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
-    credentials: true,
-  }),
-);
 
 /* ----------------- CREATE HTTP SERVER ----------------- */
 const server = http.createServer(app);
@@ -120,13 +119,6 @@ const io = new Server(server, {
 });
 
 /* ----------------- SOCKET CONNECTION ----------------- */
-// io.on("connection", (socket) => {
-//   console.log("User connected:", socket.id);
-//   socket.on("disconnect", () => {
-//     console.log("User disconnected:", socket.id);
-//   });
-// });
-
 io.on("connection", (socket) => {
   console.log("Connected:", socket.id);
 
@@ -157,6 +149,7 @@ app.use(
   "/companyLogos",
   express.static(path.join(process.cwd(), "companyLogos")),
 );
+
 // === Session setup for Passport ===
 app.use(
   session({
@@ -196,6 +189,7 @@ app.use("/", reportNotification); //report notification routes
 app.use("/", DriverRouter); // driver routes
 app.use("/", TarrifRouter); //tarrif routes
 app.use("/", trackingRouter); // for tracking routs
+app.use("/", AnalyticsRouter); // for analytics routs
 
 //employee
 app.post(

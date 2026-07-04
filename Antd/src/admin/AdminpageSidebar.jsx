@@ -23,6 +23,9 @@ import {
   DeleteColumnOutlined,
   CloseOutlined,
   MoneyCollectOutlined,
+  BranchesOutlined,
+  FundProjectionScreenOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 import "./css/AdminPage.css";
 import { AppContext } from "../context/AppContext";
@@ -75,8 +78,8 @@ function AdminpageSidebar(props) {
             },
             { key: "users", icon: <UsergroupAddOutlined />, label: "Users" },
             { key: "owners", icon: <GroupOutlined />, label: "Owners" },
-            { key: "routs", icon: <HeatMapOutlined />, label: "Routs" },
-            { key: "subrouts", icon: <HeatMapOutlined />, label: "Sub Routs" },
+            { key: "routs", icon: <BranchesOutlined />, label: "Routs" },
+            { key: "subrouts", icon: <BranchesOutlined />, label: "Sub Routs" },
             { key: "cars", icon: <CarOutlined />, label: "Cars" },
             { key: "programs", icon: <ScheduleOutlined />, label: "Programs" },
             { key: "tickets", icon: <IdcardOutlined />, label: "Ticketes" },
@@ -103,12 +106,12 @@ function AdminpageSidebar(props) {
             },
             {
               key: "PenalityPayment",
-              icon: <MoneyCollectOutlined />,
+              icon: <DollarOutlined />,
               label: "Penality Payment",
             },
             {
               key: "analytics",
-              icon: <BarChartOutlined />,
+              icon: <FundProjectionScreenOutlined />,
               label: "Analytics",
             },
             { key: "reports", icon: <FileTextOutlined />, label: "Reports" },

@@ -113,7 +113,7 @@ const Analytics = () => {
          ======================================= */}
 
       <Card
-        bordered={false}
+        variant="none"
         style={{
           borderRadius: 10,
         }}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import {
   Row,
@@ -19,41 +19,104 @@ import {
   ToolOutlined,
 } from "@ant-design/icons";
 
+import KPIWidget from "../charts/KPIWidget.jsx";
+import StatisticCard from "../charts/StatisticCard.jsx";
+import PieChart from "../charts/PieChart.jsx";
+import BarChart from "../charts/BarChart.jsx";
+import LineChart from "../charts/LineChart.jsx";
+import AreaChart from "../charts/AreaChart.jsx";
+import axios from "axios";
+
 const { Title } = Typography;
 
 const FleetDashboard = ({ filters }) => {
+  const backendURL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const [loading, setLoading] = useState(true);
+
+  const [cars, setCars] = useState([]);
+  const [carLevel, setCarLevel] = useState([]);
+
+  const [counts, setCounts] = useState({
+    cars: 0,
+    drivers: 0,
+    owners: 0,
+    activeVehicles: 0,
+    inactiveVehicles: 0,
+  });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const endpoints = [
+          { key: "cars", url: `${backendURL}/analytics/countCars` },
+          { key: "drivers", url: `${backendURL}/analytics/countDrivers` },
+          { key: "programs", url: `${backendURL}/analytics/countPrograms` },
+          { key: "owners", url: `${backendURL}/analytics/countOwners` },
+        ];
+
+        const countPromises = endpoints.map(async ({ key, url }) => {
+          const response = await axios.get(url);
+          return { key, count: response.data.count };
+        });
+
+        const results = await Promise.all(countPromises);
+        const newCounts = results.reduce((acc, { key, count }) => {
+          acc[key] = count;
+          return acc;
+        }, {});
+
+        setCounts(newCounts);
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
+  useEffect(() => {
+    const getCarByType = async () => {
+      try {
+        const response = await axios.get(`${backendURL}/analytics/carsByType`);
+        const { byType, byLevel } = response.data; // This is your [{type: "SUV", count: 14}, ...]
+
+        // 2. Map directly into two separate arrays
+        const categories = byType.map((item) => item.type);
+        const counts = byType.map((item) => item.count);
+
+        const formattedPieData = byLevel.map((item) => ({
+          name: item.level || "Unknown", // ECharts uses 'name' for labels
+          value: item.count, // ECharts uses 'value' for sizing the slices
+        }));
+
+        const formatByTypeData = byType.map((item) => ({
+          type: item.type,
+          count: item.count,
+        }));
+
+        // 3. Save both into your state object safely
+        // setCars({ categories, counts });
+        setCars(formatByTypeData);
+        setCarLevel(formattedPieData);
+      } catch (error) {
+        console.error("Error fetching car types:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getCarByType();
+  }, []);
+  // console.log("Care data:", cars);
+  // if (loading) return <p>Loading chart...</p>;
+
   const fleetData = {
     cars: 1250,
     drivers: 720,
     owners: 560,
     activeCars: 980,
   };
-
-  const carTypes = [
-    {
-      key: 1,
-      type: "Bus",
-      count: 320,
-    },
-
-    {
-      key: 2,
-      type: "Minibus",
-      count: 540,
-    },
-
-    {
-      key: 3,
-      type: "Taxi",
-      count: 250,
-    },
-
-    {
-      key: 4,
-      type: "Truck",
-      count: 140,
-    },
-  ];
 
   const driverData = [
     {
@@ -100,68 +163,67 @@ const FleetDashboard = ({ filters }) => {
   return (
     <div>
       <Title level={3}>Fleet Analytics</Title>
-
       <Divider />
-
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
-          <Card>
-            <Statistic
-              title="Total Cars"
-              value={fleetData.cars}
-              prefix={<CarOutlined />}
-            />
-          </Card>
+          <KPIWidget
+            title="Total Cars"
+            value={counts.cars}
+            icon={<CarOutlined />}
+            color="#1677ff"
+          />
         </Col>
 
         <Col xs={24} md={6}>
-          <Card>
-            <Statistic
-              title="Drivers"
-              value={fleetData.drivers}
-              prefix={<UserOutlined />}
-            />
-          </Card>
+          <KPIWidget
+            title="Drivers"
+            value={counts.drivers}
+            icon={<UserOutlined />}
+            color="#1677ff"
+          />
         </Col>
 
         <Col xs={24} md={6}>
-          <Card>
-            <Statistic
-              title="Owners"
-              value={fleetData.owners}
-              prefix={<TeamOutlined />}
-            />
-          </Card>
+          <KPIWidget
+            title="Owners"
+            value={counts.owners}
+            icon={<TeamOutlined />}
+            color="#1677ff"
+          />
         </Col>
 
         <Col xs={24} md={6}>
-          <Card>
-            <Statistic
-              title="Active Cars"
-              value={fleetData.activeCars}
-              prefix={<ToolOutlined />}
-            />
-          </Card>
+          <KPIWidget
+            title="Active Cars"
+            value={counts.activeVehicles}
+            icon={<ToolOutlined />}
+            color="#1677ff"
+          />
         </Col>
       </Row>
 
       <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
         <Col xs={24} lg={12}>
           <Card title="Car Type Distribution">
-            {carTypes.map((item) => (
-              <div key={item.key}>
-                <p>{item.type}</p>
+            {carLevel.map((item, index) => {
+              // Calculate the percentage safely, rounding it to look cleaner
+              const percentage = counts.cars
+                ? Math.round((item.value / counts.cars) * 100)
+                : 0;
 
-                <Progress percent={(item.count / fleetData.cars) * 100} />
-              </div>
-            ))}
+              return (
+                <div key={item.name || index} style={{ marginBottom: 12 }}>
+                  <p style={{ marginBottom: 4 }}>{item.name}</p>
+                  <Progress percent={percentage} />
+                </div>
+              );
+            })}
           </Card>
         </Col>
 
         <Col xs={24} lg={12}>
           <Card title="Fleet Utilization">
             <Progress type="circle" percent={78} />
-
             <p>Active vehicles compared with total fleet</p>
           </Card>
         </Col>
