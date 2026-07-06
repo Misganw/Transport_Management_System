@@ -11,6 +11,8 @@ import {
   Divider,
   Typography,
   List,
+  Spin,
+  Empty,
 } from "antd";
 
 import {
@@ -30,6 +32,7 @@ import PieChart from "../charts/PieChart.jsx";
 import BarChart from "../charts/BarChart.jsx";
 import LineChart from "../charts/LineChart.jsx";
 import AreaChart from "../charts/AreaChart.jsx";
+import ProgressChart from "../charts/ProgressChart.jsx";
 import axios from "axios";
 
 const { Title } = Typography;
@@ -67,6 +70,18 @@ const OverviewDashboard = ({ filters }) => {
     penalties: [],
     tickets: [],
   });
+
+  const [paidTickets, setPaidTickets] = useState(0);
+  const [ticketAnalytics, setTicketAnalytics] = useState({
+    daily: { total: 0, paid: 0 },
+    weekly: { total: 0, paid: 0 },
+    monthly: { total: 0, paid: 0 },
+    yearly: { total: 0, paid: 0 },
+  });
+
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [tableLoading, setTableLoading] = useState(true);
+  const [topRoutes, setTopRoutes] = useState([]);
 
   const colorPalette = [
     "#3498db", // Blue (e.g., SUV)
@@ -173,6 +188,72 @@ const OverviewDashboard = ({ filters }) => {
     fetchTrends();
   }, []);
 
+  useEffect(() => {
+    const fetchPaidTickets = async () => {
+      try {
+        const response = await axios.get(`${backendURL}/analytics/paidTickets`);
+        setPaidTickets(response.data.count);
+      } catch (error) {
+        console.error("Error fetching paid tickets:", error);
+      }
+    };
+
+    fetchPaidTickets();
+  }, []);
+
+  useEffect(() => {
+    const fetchTicketAnalytics = async () => {
+      try {
+        const response = await axios.get(
+          `${backendURL}/analytics/ticketPaymentAnalytics`,
+        );
+        setTicketAnalytics(response.data);
+      } catch (error) {
+        console.error("Error fetching ticket analytics:", error);
+      }
+    };
+
+    fetchTicketAnalytics();
+
+    // // Set up an interval to fetch fresh data every 10 seconds
+    // const intervalId = setInterval(fetchTicketAnalytics, 10000);
+    // // CRITICAL: Clean up the interval when the component unmounts
+    // return () => clearInterval(intervalId);
+  }, []);
+  // console.log("Ticket Analytics:", ticketAnalytics);
+
+  useEffect(() => {
+    const fetchMonthlyPerformance = async () => {
+      try {
+        const response = await axios.get(
+          `${backendURL}/analytics/monthlyPerformanceOnTable`,
+        );
+        setMonthlyData(response.data);
+      } catch (error) {
+        console.error("Error fetching monthly performance data:", error);
+      } finally {
+        setTableLoading(false);
+      }
+    };
+
+    fetchMonthlyPerformance();
+  }, [backendURL]);
+
+  useEffect(() => {
+    const fetchTopRouts = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${backendURL}/analytics/topRoutes`);
+        setTopRoutes(response.data);
+      } catch (error) {
+        console.error("Error fetching monthly performance data:", error);
+      } finally {
+        setTableLoading(false);
+      }
+    };
+    fetchTopRouts();
+  }, [backendURL]);
+
   if (loading) return <p>Loading Trends Chart...</p>;
   //--------------------------------
   // Summary KPI
@@ -191,41 +272,8 @@ const OverviewDashboard = ({ filters }) => {
     activeVehicles: counts.activeVehicles,
     inactiveVehicles: counts.inactiveVehicles,
   };
-  // console.log("Summary data:", summary);
-  //--------------------------------
-  // Monthly performance
-  //--------------------------------
 
-  const monthlyData = [
-    {
-      key: 1,
-      month: "January",
-      tickets: 4200,
-      revenue: 3500000,
-      violations: 90,
-    },
-
-    {
-      key: 2,
-      month: "February",
-      tickets: 5100,
-      revenue: 4200000,
-      violations: 120,
-    },
-
-    {
-      key: 3,
-      month: "March",
-      tickets: 6200,
-      revenue: 5200000,
-      violations: 150,
-    },
-  ];
-
-  //--------------------------------
-  // Top routes
-  //--------------------------------
-
+  /* ------------------  Top routes ------------------------ */
   const routes = [
     {
       key: 1,
@@ -248,16 +296,65 @@ const OverviewDashboard = ({ filters }) => {
       violations: 60,
     },
   ];
+  const performanceColumns = [
+    {
+      title: "Month",
+      dataIndex: "month",
+      key: "month",
+    },
+    {
+      title: "Tickets",
+      dataIndex: "tickets",
+      key: "tickets",
+      render: (v) => <strong>{v.toLocaleString()}</strong>,
+    },
+    {
+      title: "Revenue",
+      dataIndex: "revenue",
+      key: "revenue",
+      render: (v) => (
+        <span style={{ color: "#2ecc71", fontWeight: "bold" }}>
+          {v.toLocaleString()} ETB
+        </span>
+      ),
+    },
+    {
+      title: "Violations",
+      dataIndex: "violations",
+      key: "violations",
+      render: (v) => (
+        <span style={{ color: v > 0 ? "#e74c3c" : "inherit" }}>{v}</span>
+      ),
+    },
+  ];
 
+  const topRoutColumns = [
+    {
+      title: "Route",
+      dataIndex: "route",
+      key: "route",
+    },
+    {
+      title: "Tickets",
+      dataIndex: "tickets",
+      key: "tickets",
+      render: (v) => v.toLocaleString(),
+    },
+    {
+      title: "Violations",
+      dataIndex: "violations",
+      key: "violations",
+      render: (v) => (
+        <Tag color={v > 5 ? "red" : v > 0 ? "orange" : "green"}>{v}</Tag>
+      ),
+    },
+  ];
   return (
     <div>
       <Title level={3}>Transport Management Overview</Title>
-
       <Divider />
 
-      {/* ===============================
-      KPI CARDS
-================================ */}
+      {/* ==========  KPI CARDS ============== */}
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
@@ -348,12 +445,12 @@ const OverviewDashboard = ({ filters }) => {
       <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
         <Col span={24} lg={12}>
           <BarChart
-            title="Vehicle Status"
+            title="Vehicle Distribution"
             type="bar"
             categories={carTypes.categories}
             series={[
               {
-                name: "cars",
+                name: "",
                 data: carTypes.counts,
                 itemStyle: {
                   color: (params) => {
@@ -395,10 +492,56 @@ const OverviewDashboard = ({ filters }) => {
       </Row>
       <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
         <Col xs={24} lg={12}>
-          <Card title="Ticket Payment Status">
-            <Progress percent={86} status="active" />
+          <ProgressChart
+            title="Ticket Payment Status"
+            data={[
+              {
+                label: "Paid Tickets",
+                value: paidTickets
+                  ? Math.round((paidTickets / summary.tickets) * 100)
+                  : 0,
+              },
+            ]}
+          />
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card title="Ticket Payment Status Breakdown">
+            <Row gutter={[32, 16]}>
+              {Object.entries(ticketAnalytics).map(([key, value]) => {
+                // Calculate conversion percentages dynamically
+                const percentage = value.total
+                  ? Math.round((value.paid / value.total) * 100)
+                  : 0;
 
-            <p>Paid tickets percentage</p>
+                return (
+                  <Col xs={24} lg={12} key={key}>
+                    <div
+                      style={{
+                        textTransform: "capitalize",
+                        fontWeight: "bold",
+                        marginBottom: 6,
+                      }}
+                    >
+                      {key} Performance
+                    </div>
+                    <Progress
+                      type="line"
+                      percent={percentage}
+                      status={percentage === 100 ? "success" : "active"}
+                    />
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#8c8c8c",
+                        marginTop: 4,
+                      }}
+                    >
+                      {value.paid} paid / {value.total} total tickets
+                    </div>
+                  </Col>
+                );
+              })}
+            </Row>
           </Card>
         </Col>
       </Row>
@@ -408,67 +551,41 @@ const OverviewDashboard = ({ filters }) => {
       <Row style={{ marginTop: 20 }}>
         <Col span={24}>
           <Card title="Monthly Performance">
-            <Table
-              dataSource={monthlyData}
-              columns={[
-                {
-                  title: "Month",
-                  dataIndex: "month",
-                },
-
-                {
-                  title: "Tickets",
-                  dataIndex: "tickets",
-                },
-
-                {
-                  title: "Revenue",
-                  dataIndex: "revenue",
-                  render: (v) => `${v.toLocaleString()} ETB`,
-                },
-
-                {
-                  title: "Violations",
-                  dataIndex: "violations",
-                },
-              ]}
-            />
+            {tableLoading ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <Spin tip="Calculating system analytics logs..." />
+              </div>
+            ) : monthlyData.length > 0 ? (
+              <Table dataSource={monthlyData} columns={performanceColumns} />
+            ) : (
+              <Empty description="No transactions found for this company profile yet." />
+            )}
           </Card>
         </Col>
       </Row>
 
       {/* ================ TOP ROUTES  ============== */}
-
       <Row style={{ marginTop: 20 }}>
         <Col span={24}>
           <Card title="Top Performing Routes">
-            <Table
-              dataSource={routes}
-              columns={[
-                {
-                  title: "Route",
-                  dataIndex: "route",
-                },
-
-                {
-                  title: "Tickets",
-                  dataIndex: "tickets",
-                },
-
-                {
-                  title: "Violations",
-                  dataIndex: "violations",
-                  render: (v) => <Tag color="red">{v}</Tag>,
-                },
-              ]}
-            />
+            {loading ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <Spin tip="Parsing fleet telemetry performance profiles..." />
+              </div>
+            ) : topRoutes.length > 0 ? (
+              <Table
+                dataSource={topRoutes} // State hook array populated dynamically
+                columns={topRoutColumns}
+                pagination={{ pageSize: 5 }}
+              />
+            ) : (
+              <Empty description="No operational routes found under your active fleet registry profile." />
+            )}
           </Card>
         </Col>
       </Row>
 
-      {/* ===============================
-       SYSTEM HEALTH
-================================ */}
+      {/* ================  SYSTEM HEALTH  ================ */}
 
       <Row style={{ marginTop: 20 }}>
         <Col span={24}>
@@ -476,12 +593,9 @@ const OverviewDashboard = ({ filters }) => {
             <List
               dataSource={[
                 "245 vehicles currently online",
-
                 "38 active routes running",
-
                 "12 active violation cases",
-
-                "85 drivers completed trips today",
+                "85 drvers completed trips today",
               ]}
               renderItem={(item) => <List.Item>{item}</List.Item>}
             />

@@ -37,12 +37,9 @@ const LineChart = ({
 
     toolbox: {
       show: true,
-
       feature: {
         saveAsImage: {},
-
         restore: {},
-
         dataZoom: {},
       },
     },
@@ -59,41 +56,28 @@ const LineChart = ({
 
     grid: {
       left: 60,
-
       right: 30,
-
       bottom: 70,
-
       top: 80,
-
       containLabel: true,
     },
 
     xAxis: {
       type: "category",
-
       boundaryGap: false,
-
       data: categories,
     },
-
     yAxis: {
       type: "value",
     },
 
     series: series.map((item) => ({
       ...item,
-
       type: "line",
-
       smooth,
-
       showSymbol,
-
       symbol: "circle",
-
       symbolSize: 8,
-
       lineStyle: {
         width: 3,
       },
@@ -115,7 +99,6 @@ const LineChart = ({
         option={option}
         style={{
           height,
-
           width: "100%",
         }}
       />

@@ -332,7 +332,7 @@ export const getPaymentTrends = async (req, res) => {
 
     // Run both aggregations in parallel
     const [penaltyData, ticketData] = await Promise.all([
-      Penalty.aggregate(trendPipeline),
+      Payment.aggregate(trendPipeline),
       PayTicket.aggregate(trendPipeline),
     ]);
 
@@ -371,11 +371,307 @@ export const getpaidTickets = async (req, res) => {
     const user = req.user; // from auth middleware
     const paidTicketsCount = await Ticket.countDocuments({
       companyId: user.companyID,
-      isPaid: true,
+      paymentStatus: "paid", // Assuming 'paid' is the status for paid tickets
     });
     res.json({ count: paidTicketsCount });
   } catch (error) {
     console.error("Error calculating paid tickets:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getTicketPaymentAnalytics = async (req, res) => {
+  try {
+    const user = req.user; // from auth middleware
+
+    const company_Id = new mongoose.Types.ObjectId(user.companyID);
+    const now = new Date();
+
+    // Define starting points for time ranges
+    const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+
+    // const startOfWeek = new Date();
+    // startOfWeek.setDate(now.getDate() - now.getDay()); // Start of current week (Sunday)
+    // startOfWeek.setHours(0, 0, 0, 0);
+    const startOfWeek = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 7,
+      0,
+      0,
+      0,
+      0,
+    );
+
+    // const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 30,
+      0,
+      0,
+      0,
+      0,
+    );
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    const analytics = await Ticket.aggregate([
+      { $match: { companyId: company_Id } },
+      {
+        $facet: {
+          daily: [
+            { $match: { createdAt: { $gte: startOfDay } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                paid: {
+                  $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0] },
+                },
+              },
+            },
+          ],
+          weekly: [
+            { $match: { createdAt: { $gte: startOfWeek } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                paid: {
+                  $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0] },
+                },
+              },
+            },
+          ],
+          monthly: [
+            { $match: { createdAt: { $gte: startOfMonth } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                paid: {
+                  $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0] },
+                },
+              },
+            },
+          ],
+          yearly: [
+            { $match: { createdAt: { $gte: startOfYear } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                paid: {
+                  $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0] },
+                },
+              },
+            },
+          ],
+        },
+      },
+    ]);
+
+    // Format output safely to default to 0 if no tickets exist for a time range
+    const formatResult = (data) =>
+      data[0]
+        ? { total: data[0].total, paid: data[0].paid }
+        : { total: 0, paid: 0 };
+
+    res.json({
+      daily: formatResult(analytics[0].daily),
+      weekly: formatResult(analytics[0].weekly),
+      monthly: formatResult(analytics[0].monthly),
+      yearly: formatResult(analytics[0].yearly),
+    });
+  } catch (error) {
+    console.error("Error calculating ticket analytics:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getMonthlyPerformanceMetrics = async (req, res) => {
+  try {
+    const user = req.user;
+    const company_Id = new mongoose.Types.ObjectId(user.companyID);
+
+    // Get the boundary dates for the current year (2026)
+    const currentYear = new Date().getFullYear(); // 2026
+    const startOfYear = new Date(`${currentYear}-01-01T00:00:00.000Z`);
+    const endOfYear = new Date(`${currentYear}-12-31T23:59:59.999Z`);
+
+    const metrics = await Ticket.aggregate([
+      // 1. Fetch only tickets belonging to this company AND matching the current year
+      {
+        $match: {
+          companyId: company_Id,
+          createdAt: { $gte: startOfYear, $lte: endOfYear },
+        },
+      },
+
+      // 2. Fetch matching violations from the violation collection
+      {
+        $lookup: {
+          from: "reports", // Ensure this matches your actual collection name
+          localField: "_id",
+          foreignField: "ticketId",
+          as: "matchedViolations",
+        },
+      },
+
+      // 3. Extract the clean year-month string and count violations safely per ticket
+      {
+        $project: {
+          monthString: {
+            $dateToString: { format: "%Y-%m", date: "$createdAt" },
+          },
+          // Pull the raw ticket price directly from your record
+          ticketPrice: { $ifNull: [{ $sum: "$payments.amount" }, 0] }, // Replace "$price" with your actual ticket cost field name
+          violationCount: { $size: "$matchedViolations" },
+        },
+      },
+
+      // 4. Finally group by month to sum up the totals perfectly
+      {
+        $group: {
+          _id: "$monthString",
+          tickets: { $sum: 1 }, // Counts every distinct ticket record
+          revenue: { $sum: "$ticketPrice" }, // Sums the unique ticket amount safely
+          violations: { $sum: "$violationCount" }, // Sums up total structural infractions
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          tickets: 1,
+          revenue: 1,
+          violations: 1,
+        },
+      },
+      { $sort: { month: 1 } },
+    ]);
+
+    // Map month string indexes ("2026-06") to human labels ("June 2026")
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const finalResult = metrics.map((item) => {
+      const [year, monthIndex] = item.month.split("-");
+      return {
+        ...item,
+        key: item.month,
+        month: `${monthNames[parseInt(monthIndex, 10) - 1]} ${year}`,
+      };
+    });
+
+    res.json(finalResult);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getTopRoutesMetrics = async (req, res) => {
+  try {
+    const user = req.user;
+    const company_Id = new mongoose.Types.ObjectId(user.companyID);
+
+    const routeMetrics = await Ticket.aggregate([
+      // 1. Filter tickets by company profile
+      { $match: { companyId: company_Id } },
+
+      // 2. Lookup violations tied to this specific ticket
+      {
+        $lookup: {
+          from: "reports",
+          localField: "_id",
+          foreignField: "ticketId",
+          as: "matchedViolations",
+        },
+      },
+
+      // 3. Trace back to the Program data
+      {
+        $lookup: {
+          from: "programs", // Adjust to the exact name of your programs collection
+          localField: "programId",
+          foreignField: "_id",
+          as: "program",
+        },
+      },
+      { $unwind: "$program" },
+
+      // 4. Trace from the Program down to the Route details
+      {
+        $lookup: {
+          from: "routs", // Adjust to the exact name of your routes collection (e.g., "routs" or "routes")
+          localField: "program.routId", // Using the correct field path from your schemas
+          foreignField: "_id",
+          as: "routeDetails",
+        },
+      },
+      { $unwind: "$routeDetails" },
+
+      // 5. Structure the key identifiers before grouping
+      {
+        $project: {
+          // Concat origin and destination names into a readable string (e.g. "Addis Ababa - Gondar")
+          routeName: {
+            $concat: [
+              "$routeDetails.departure", // Adjust to your route model's field name (e.g. departure/startLocation)
+              " - ",
+              "$routeDetails.arrival", // Adjust to your route model's field name (e.g. arrival/endLocation)
+            ],
+          },
+          violationCount: { $size: "$matchedViolations" },
+        },
+      },
+
+      // 6. Group all metrics by the unique route string name
+      {
+        $group: {
+          _id: "$routeName",
+          tickets: { $sum: 1 },
+          violations: { $sum: "$violationCount" },
+        },
+      },
+
+      // 7. Format payload keys cleanly for Ant Design Table consumption
+      {
+        $project: {
+          _id: 0,
+          route: "$_id",
+          tickets: 1,
+          violations: 1,
+        },
+      },
+
+      // 8. Sort by ticket performance (Highest sales at the top)
+      { $sort: { tickets: -1 } },
+    ]);
+
+    // Inject an index-based unique key parameter for Ant Design rendering maps
+    const formattedResult = routeMetrics.map((item, index) => ({
+      ...item,
+      key: `route-${index}`,
+    }));
+
+    res.json(formattedResult);
+  } catch (error) {
+    console.error("Top Routes Metrics Error: ", error);
     res.status(500).json({ error: error.message });
   }
 };
