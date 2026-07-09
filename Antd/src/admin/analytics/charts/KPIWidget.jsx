@@ -60,22 +60,30 @@ const KPIWidget = ({
             {icon}
           </div>
         </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Statistic
+            value={value}
+            precision={precision}
+            prefix={prefix}
+            suffix={suffix}
+            styles={{ Size: "12px" }}
+          />
 
-        <Statistic
-          value={value}
-          precision={precision}
-          prefix={prefix}
-          suffix={suffix}
-        />
-
-        {trend !== undefined && (
-          <Tooltip title="Compared to previous period">
-            <Tag color={positive ? "green" : "red"}>
-              {positive ? <ArrowUpOutlined /> : <ArrowDownOutlined />}{" "}
-              {Math.abs(trend)}%
-            </Tag>
-          </Tooltip>
-        )}
+          {trend !== undefined && (
+            <Tooltip title="Compared to previous period">
+              <Tag color={positive ? "green" : "red"}>
+                {positive ? <ArrowUpOutlined /> : <ArrowDownOutlined />}{" "}
+                {Math.abs(trend)}%
+              </Tag>
+            </Tooltip>
+          )}
+        </div>
       </Space>
     </Card>
   );

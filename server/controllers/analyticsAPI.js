@@ -24,13 +24,59 @@ import utc from "dayjs/plugin/utc.js";
 import axios from "axios";
 import getUserID from "../middleware/middleware.js";
 
+const getCountWithTrend = async (Model, companyId) => {
+  const todayStart = dayjs().startOf("day").toDate();
+  const tomorrowStart = dayjs().add(1, "day").startOf("day").toDate();
+  const yesterdayStart = dayjs().subtract(1, "day").startOf("day").toDate();
+
+  const [count, today, yesterday] = await Promise.all([
+    Model.countDocuments({ companyId }),
+
+    Model.countDocuments({
+      companyId,
+      createdAt: {
+        $gte: todayStart,
+        $lt: tomorrowStart,
+      },
+    }),
+
+    Model.countDocuments({
+      companyId,
+      createdAt: {
+        $gte: yesterdayStart,
+        $lt: todayStart,
+      },
+    }),
+  ]);
+
+  let trend = 0;
+
+  if (yesterday === 0) {
+    trend = today > 0 ? 100 : 0;
+  } else {
+    trend = Number((((today - yesterday) / yesterday) * 100).toFixed(1));
+  }
+
+  const result = {
+    // model: Model.modelName,
+    count,
+    today,
+    yesterday,
+    trend,
+  };
+
+  // console.log("Analytics Result:", result);
+
+  return result;
+};
+
 export const countCars = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const carCount = await Car.countDocuments({ companyId: user.companyID });
-
-    // console.log("Car count for company", user.companyID, ":", carCount);
-    res.json({ count: carCount });
+    // const carCount = await Car.countDocuments({ companyId: user.companyID });
+    // // console.log("Car count for company", user.companyID, ":", carCount);
+    // res.json({ count: carCount });
+    res.json(await getCountWithTrend(Car, req.user.companyID));
   } catch (error) {
     console.error("Error counting cars:", error);
     res.status(500).json({ error: error.message });
@@ -39,10 +85,11 @@ export const countCars = async (req, res) => {
 export const countDrivers = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const driverCount = await Driver.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: driverCount });
+    // const driverCount = await Driver.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: driverCount });
+    res.json(await getCountWithTrend(Driver, req.user.companyID));
   } catch (error) {
     console.error("Error counting drivers:", error);
     res.status(500).json({ error: error.message });
@@ -51,10 +98,11 @@ export const countDrivers = async (req, res) => {
 export const countPassengers = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const passengerCount = await Passenger.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: passengerCount });
+    // const passengerCount = await Passenger.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: passengerCount });
+    res.json(await getCountWithTrend(Passenger, req.user.companyID));
   } catch (error) {
     console.error("Error counting passengers:", error);
     res.status(500).json({ error: error.message });
@@ -64,10 +112,11 @@ export const countPassengers = async (req, res) => {
 export const countPrograms = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const programCount = await Program.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: programCount });
+    // const programCount = await Program.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: programCount });
+    res.json(await getCountWithTrend(Program, req.user.companyID));
   } catch (error) {
     console.error("Error counting programs:", error);
     res.status(500).json({ error: error.message });
@@ -76,10 +125,11 @@ export const countPrograms = async (req, res) => {
 export const countTickets = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const ticketCount = await Ticket.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: ticketCount });
+    // const ticketCount = await Ticket.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: ticketCount });
+    res.json(await getCountWithTrend(Ticket, req.user.companyID));
   } catch (error) {
     console.error("Error counting tickets:", error);
     res.status(500).json({ error: error.message });
@@ -89,10 +139,11 @@ export const countTickets = async (req, res) => {
 export const countReports = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const reportCount = await Report.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: reportCount });
+    // const reportCount = await Report.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: reportCount });
+    res.json(await getCountWithTrend(Report, req.user.companyID));
   } catch (error) {
     console.error("Error counting reports:", error);
     res.status(500).json({ error: error.message });
@@ -102,10 +153,11 @@ export const countReports = async (req, res) => {
 export const countEmployees = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const employeeCount = await Employee.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: employeeCount });
+    // const employeeCount = await Employee.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: employeeCount });
+    res.json(await getCountWithTrend(Employee, req.user.companyID));
   } catch (error) {
     console.error("Error counting employees:", error);
     res.status(500).json({ error: error.message });
@@ -115,10 +167,11 @@ export const countEmployees = async (req, res) => {
 export const countOwners = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const ownerCount = await Owner.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: ownerCount });
+    // const ownerCount = await Owner.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: ownerCount });
+    res.json(await getCountWithTrend(Owner, req.user.companyID));
   } catch (error) {
     console.error("Error counting owners:", error);
     res.status(500).json({ error: error.message });
@@ -128,10 +181,11 @@ export const countOwners = async (req, res) => {
 export const countPayments = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const paymentCount = await Payment.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: paymentCount });
+    // const paymentCount = await Payment.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: paymentCount });
+    res.json(await getCountWithTrend(Payment, req.user.companyID));
   } catch (error) {
     console.error("Error counting payments:", error);
     res.status(500).json({ error: error.message });
@@ -141,10 +195,11 @@ export const countPayments = async (req, res) => {
 export const countPenalities = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const penaltyCount = await Penalty.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: penaltyCount });
+    // const penaltyCount = await Penalty.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: penaltyCount });
+    res.json(await getCountWithTrend(Penalty, req.user.companyID));
   } catch (error) {
     console.error("Error counting penalties:", error);
     res.status(500).json({ error: error.message });
@@ -154,10 +209,11 @@ export const countPenalities = async (req, res) => {
 export const countRules = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const ruleCount = await Rule.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: ruleCount });
+    // const ruleCount = await Rule.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: ruleCount });
+    res.json(await getCountWithTrend(Rule, req.user.companyID));
   } catch (error) {
     console.error("Error counting rules:", error);
     res.status(500).json({ error: error.message });
@@ -167,10 +223,11 @@ export const countRules = async (req, res) => {
 export const countTarrifs = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const tariffCount = await Tariff.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: tariffCount });
+    // const tariffCount = await Tariff.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: tariffCount });
+    res.json(await getCountWithTrend(Tariff, req.user.companyID));
   } catch (error) {
     console.error("Error counting tariffs:", error);
     res.status(500).json({ error: error.message });
@@ -179,11 +236,12 @@ export const countTarrifs = async (req, res) => {
 
 export const countTraffic = async (req, res) => {
   try {
-    const user = req.user; // from auth middleware
-    const trafficCount = await Traffic.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: trafficCount });
+    // const user = req.user; // from auth middleware
+    // const trafficCount = await Traffic.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: trafficCount });
+    res.json(await getCountWithTrend(Traffic, req.user.companyID));
   } catch (error) {
     console.error("Error counting traffic:", error);
     res.status(500).json({ error: error.message });
@@ -193,10 +251,11 @@ export const countTraffic = async (req, res) => {
 export const countRoutes = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const routeCount = await Subroute.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: routeCount });
+    // const routeCount = await Subroute.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: routeCount });
+    res.json(await getCountWithTrend(Route, req.user.companyID));
   } catch (error) {
     console.error("Error counting routes:", error);
     res.status(500).json({ error: error.message });
@@ -206,10 +265,11 @@ export const countRoutes = async (req, res) => {
 export const countSubroutes = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const subrouteCount = await Route.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: subrouteCount });
+    // const subrouteCount = await Route.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: subrouteCount });
+    res.json(await getCountWithTrend(Subroute, req.user.companyID));
   } catch (error) {
     console.error("Error counting subroutes:", error);
     res.status(500).json({ error: error.message });
@@ -219,10 +279,11 @@ export const countSubroutes = async (req, res) => {
 export const countUsers = async (req, res) => {
   try {
     const user = req.user; // from auth middleware
-    const userCount = await User.countDocuments({
-      companyId: user.companyID,
-    });
-    res.json({ count: userCount });
+    // const userCount = await User.countDocuments({
+    //   companyId: user.companyID,
+    // });
+    // res.json({ count: userCount });
+    res.json(await getCountWithTrend(User, req.user.companyID));
   } catch (error) {
     console.error("Error counting users:", error);
     res.status(500).json({ error: error.message });
@@ -672,6 +733,105 @@ export const getTopRoutesMetrics = async (req, res) => {
     res.json(formattedResult);
   } catch (error) {
     console.error("Top Routes Metrics Error: ", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getActiveProgramCarsCount = async (req, res) => {
+  try {
+    const user = req.user; // If scoped by company
+    const objectIdCompanyId = new mongoose.Types.ObjectId(user.companyID);
+
+    const result = await Program.aggregate([
+      // 1. Filter for active programs belonging to the company
+      {
+        $match: {
+          companyId: objectIdCompanyId,
+          status: "active",
+        },
+      },
+
+      // 2. Group by carId to eliminate duplicate car references across multiple active programs
+      {
+        $group: {
+          _id: "$carId",
+        },
+      },
+
+      // 3. Count total unique cars
+      {
+        $count: "totalActiveCars",
+      },
+    ]);
+
+    // Format response payload: handle cases where count array is empty
+    const totalCount = result.length > 0 ? result[0].totalActiveCars : 0;
+
+    res.json({
+      success: true,
+      count: totalCount,
+    });
+  } catch (error) {
+    console.error("Error counting active program cars:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getCarTypeCountByActiveProgram = async (req, res) => {
+  try {
+    const user = req.user; // Retrieved from your auth middleware
+    const objectIdCompanyId = new mongoose.Types.ObjectId(user.companyID);
+
+    const data = await Program.aggregate([
+      // 1. Filter for active programs belonging to the user's company
+      {
+        $match: {
+          companyId: objectIdCompanyId,
+          status: "active",
+        },
+      },
+
+      // 2. Eliminate duplicate car entries within active programs first
+      {
+        $group: {
+          _id: "$carId",
+        },
+      },
+
+      // 3. Join with the cars collection to get car details (like "type")
+      {
+        $lookup: {
+          from: "cars", // Target collection name in MongoDB (usually lowercase plural)
+          localField: "_id", // The carId from the group stage
+          foreignField: "_id", // The document ID in the cars collection
+          as: "carDetails",
+        },
+      },
+
+      // 4. Flatten the carDetails array returned by $lookup
+      { $unwind: "$carDetails" },
+
+      // 5. Group by the car's type attribute and count them up
+      {
+        $group: {
+          _id: "$carDetails.type",
+          count: { $sum: 1 },
+        },
+      },
+
+      // 6. Sort alphabetically or by highest count
+      { $sort: { count: -1 } },
+    ]);
+
+    // Format the data cleanly for the frontend charts
+    const formattedData = data.map((item) => ({
+      type: item._id || "Unknown",
+      count: item.count,
+    }));
+
+    res.json(formattedData);
+  } catch (error) {
+    console.error("Error fetching active cars by type:", error);
     res.status(500).json({ error: error.message });
   }
 };

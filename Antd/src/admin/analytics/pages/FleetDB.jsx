@@ -25,6 +25,8 @@ import PieChart from "../charts/PieChart.jsx";
 import BarChart from "../charts/BarChart.jsx";
 import LineChart from "../charts/LineChart.jsx";
 import AreaChart from "../charts/AreaChart.jsx";
+import ProgressChart from "../charts/ProgressChart.jsx";
+import StatisticalChart from "../charts/StatisticalChart.jsx";
 import axios from "axios";
 
 const { Title } = Typography;
@@ -32,10 +34,13 @@ const { Title } = Typography;
 const FleetDashboard = ({ filters }) => {
   const backendURL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-  const [loading, setLoading] = useState(true);
 
+  const [loading, setLoading] = useState(true);
   const [cars, setCars] = useState([]);
   const [carLevel, setCarLevel] = useState([]);
+  const [carbyAvtiveProgram, setcarbyAvtiveProgram] = useState();
+  const [carTypeCountByActiveProgram, setcarTypeCountByActiveProgram] =
+    useState({ categories: [], count: [] });
 
   const [counts, setCounts] = useState({
     cars: 0,
@@ -44,6 +49,15 @@ const FleetDashboard = ({ filters }) => {
     activeVehicles: 0,
     inactiveVehicles: 0,
   });
+
+  const colorPalette = [
+    "#3498db", // Blue (e.g., SUV)
+    "#2ecc71", // Green (e.g., Sedan)
+    "#e74c3c", // Red (e.g., Truck)
+    "#f1c40f", // Yellow
+    "#9b59b6", // Purple
+    "#34495e", // Dark Grey
+  ];
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -109,14 +123,47 @@ const FleetDashboard = ({ filters }) => {
     getCarByType();
   }, []);
   // console.log("Care data:", cars);
-  // if (loading) return <p>Loading chart...</p>;
+  useEffect(() => {
+    const getcountCarByActiveProgram = async () => {
+      try {
+        setLoading(true);
+        const countCarByActiveProgram = await axios.get(
+          `${backendURL}/analytics/countCarsByActiveProgram`,
+        );
 
-  const fleetData = {
-    cars: 1250,
-    drivers: 720,
-    owners: 560,
-    activeCars: 980,
-  };
+        setcarbyAvtiveProgram(countCarByActiveProgram.data.count);
+      } catch (error) {
+        console.error("Can't count Cars by Active program", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getcountCarByActiveProgram();
+  }, [backendURL]);
+
+  useEffect(() => {
+    const getcarTypeCountByActiveProgram = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `${backendURL}/analytics/carTypeCountByActiveProgram`,
+        );
+        const formatData = response.data;
+        const categories = formatData.map((item) => item.type);
+        const count = formatData.map((item) => item.count);
+        setcarTypeCountByActiveProgram({ categories, count });
+
+        console.log(carTypeCountByActiveProgram);
+      } catch (error) {
+        console.error("Can not get car type count by active program", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getcarTypeCountByActiveProgram();
+  }, [backendURL]);
+
+  if (loading) return <p>Loading chart...</p>;
 
   const driverData = [
     {
@@ -222,9 +269,40 @@ const FleetDashboard = ({ filters }) => {
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card title="Fleet Utilization">
-            <Progress type="circle" percent={78} />
-            <p>Active vehicles compared with total fleet</p>
+          <Card title="Today's Cars on Active Programs">
+            <Progress
+              type="circle"
+              percent={Math.round((carbyAvtiveProgram / counts.cars) * 100)}
+            />
+            <p>
+              Active vehicles compared with total -{carbyAvtiveProgram}- cars
+            </p>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
+        <Col xs={24} md={16}>
+          <Card title=" Today's Active Cars Distribution by Vehicle Type">
+            <BarChart
+              type="bar"
+              categories={carTypeCountByActiveProgram.categories}
+              series={[
+                {
+                  name: "",
+                  data: carTypeCountByActiveProgram.count.map((value) =>
+                    counts.cars > 0 ? value : 0,
+                  ),
+                  itemStyle: {
+                    color: (params) => {
+                      return colorPalette[
+                        params.dataIndex % colorPalette.length
+                      ];
+                    },
+                  },
+                },
+              ]}
+            />
           </Card>
         </Col>
       </Row>

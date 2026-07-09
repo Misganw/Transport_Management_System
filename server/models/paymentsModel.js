@@ -64,4 +64,9 @@ const penalitySchema = new mongoose.Schema(
 
   { timestamps: true },
 );
-export default mongoose.model("payments", penalitySchema);
+// export default mongoose.model("payments", penalitySchema);
+
+//  RIGHT: Checks the cache first, falls back to compiling if it doesn't exist
+const Payment =
+  mongoose.models.payments || mongoose.model("payments", penalitySchema);
+export default Payment;

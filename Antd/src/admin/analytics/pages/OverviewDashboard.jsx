@@ -42,26 +42,33 @@ const OverviewDashboard = ({ filters }) => {
     import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   const [loading, setLoading] = useState(true);
+
+  const defaultMetric = {
+    count: 0,
+    today: 0,
+    yesterday: 0,
+    trend: 0,
+  };
   const [counts, setCounts] = useState({
-    cars: 0,
-    drivers: 0,
-    passengers: 0,
-    programs: 0,
-    tickets: 0,
-    violations: 0,
-    employees: 0,
-    owners: 0,
-    payments: 0,
-    penalities: 0,
-    rules: 0,
-    tarrifs: 0,
-    traffic: 0,
-    revenue: 0,
-    routes: 0,
-    subroutes: 0,
-    users: 0,
-    activeVehicles: 0,
-    inactiveVehicles: 0,
+    cars: { ...defaultMetric },
+    drivers: { ...defaultMetric },
+    passengers: { ...defaultMetric },
+    programs: { ...defaultMetric },
+    tickets: { ...defaultMetric },
+    violations: { ...defaultMetric },
+    employees: { ...defaultMetric },
+    owners: { ...defaultMetric },
+    payments: { ...defaultMetric },
+    penalities: { ...defaultMetric },
+    rules: { ...defaultMetric },
+    tarrifs: { ...defaultMetric },
+    traffic: { ...defaultMetric },
+    revenue: { ...defaultMetric },
+    routes: { ...defaultMetric },
+    subroutes: { ...defaultMetric },
+    users: { ...defaultMetric },
+    activeVehicles: { ...defaultMetric },
+    inactiveVehicles: { ...defaultMetric },
   });
   const [carTypes, setCarTypes] = useState({ categories: [], counts: [] });
   const [carTypesPieData, setCarTypesPieData] = useState([]);
@@ -116,13 +123,24 @@ const OverviewDashboard = ({ filters }) => {
         ];
 
         const countPromises = endpoints.map(async ({ key, url }) => {
-          const response = await axios.get(url);
-          return { key, count: response.data.count };
+          // const response = await axios.get(url);
+          // return { key, count: response.data.count };
+          const { data } = await axios.get(url);
+
+          return {
+            key,
+            metric: {
+              count: data.count ?? 0,
+              today: data.today ?? 0,
+              yesterday: data.yesterday ?? 0,
+              trend: data.trend ?? 0,
+            },
+          };
         });
 
         const results = await Promise.all(countPromises);
-        const newCounts = results.reduce((acc, { key, count }) => {
-          acc[key] = count;
+        const newCounts = results.reduce((acc, { key, metric }) => {
+          acc[key] = metric;
           return acc;
         }, {});
 
@@ -260,42 +278,20 @@ const OverviewDashboard = ({ filters }) => {
   //--------------------------------
 
   const summary = {
-    cars: counts.cars,
-    drivers: counts.drivers,
-    routes: counts.routes,
-    subroutes: counts.subroutes,
-    users: counts.users,
-    tickets: counts.tickets,
-    revenue: counts.revenue,
-    violations: counts.violations,
-    programs: counts.programs,
-    activeVehicles: counts.activeVehicles,
-    inactiveVehicles: counts.inactiveVehicles,
+    cars: counts.cars.count,
+    drivers: counts.drivers.count,
+    routes: counts.routes.count,
+    subroutes: counts.subroutes.count,
+    users: counts.users.count,
+    tickets: counts.tickets.count,
+    revenue: counts.revenue.count,
+    violations: counts.violations.count,
+    programs: counts.programs.count,
   };
+  // console.log("Cars Trend: ", counts.cars.trend);
+  // console.log("Drivers Trend: ", counts.drivers.trend);
+  // console.log("routs Trend: ", counts.routes.trend);
 
-  /* ------------------  Top routes ------------------------ */
-  const routes = [
-    {
-      key: 1,
-      route: "Addis - Gondar",
-      tickets: 5400,
-      violations: 120,
-    },
-
-    {
-      key: 2,
-      route: "Bahir Dar - Addis",
-      tickets: 4300,
-      violations: 90,
-    },
-
-    {
-      key: 3,
-      route: "Debre Tabor - Addis",
-      tickets: 3200,
-      violations: 60,
-    },
-  ];
   const performanceColumns = [
     {
       title: "Month",
@@ -363,7 +359,7 @@ const OverviewDashboard = ({ filters }) => {
             value={summary.cars}
             icon={<CarOutlined />}
             color="#1677ff"
-            trend={8}
+            trend={counts.cars.trend}
           />
         </Col>
 
@@ -373,7 +369,7 @@ const OverviewDashboard = ({ filters }) => {
             value={summary.drivers}
             icon={<UserOutlined />}
             color="#1677ff"
-            trend={5}
+            trend={counts.drivers.trend}
           />
         </Col>
 
@@ -383,7 +379,7 @@ const OverviewDashboard = ({ filters }) => {
             value={summary.routes}
             icon={<EnvironmentOutlined />}
             color="#1677ff"
-            trend={3}
+            trend={counts.routes.trend}
           />
         </Col>
 
@@ -393,7 +389,7 @@ const OverviewDashboard = ({ filters }) => {
             value={summary.users}
             icon={<TeamOutlined />}
             color="#1677ff"
-            trend={10}
+            trend={counts.users.trend}
           />
         </Col>
       </Row>
@@ -404,7 +400,7 @@ const OverviewDashboard = ({ filters }) => {
             value={summary.tickets}
             icon={<QrcodeOutlined />}
             color="#1677ff"
-            trend={15}
+            trend={counts.tickets.trend}
           />
         </Col>
 
@@ -415,7 +411,7 @@ const OverviewDashboard = ({ filters }) => {
             icon={<DollarOutlined />}
             color="#1677ff"
             suffix="ETB"
-            trend={12}
+            trend={counts.revenue.trend}
           />
         </Col>
 
@@ -425,7 +421,7 @@ const OverviewDashboard = ({ filters }) => {
             value={summary.violations}
             icon={<WarningOutlined />}
             color="#1677ff"
-            trend={-5}
+            trend={counts.violations.trend}
           />
         </Col>
 
@@ -435,7 +431,7 @@ const OverviewDashboard = ({ filters }) => {
             value={summary.programs}
             icon={<ScheduleOutlined />}
             color="#1677ff"
-            trend={7}
+            trend={counts.programs.trend}
           />
         </Col>
       </Row>
@@ -581,24 +577,6 @@ const OverviewDashboard = ({ filters }) => {
             ) : (
               <Empty description="No operational routes found under your active fleet registry profile." />
             )}
-          </Card>
-        </Col>
-      </Row>
-
-      {/* ================  SYSTEM HEALTH  ================ */}
-
-      <Row style={{ marginTop: 20 }}>
-        <Col span={24}>
-          <Card title="System Activity">
-            <List
-              dataSource={[
-                "245 vehicles currently online",
-                "38 active routes running",
-                "12 active violation cases",
-                "85 drvers completed trips today",
-              ]}
-              renderItem={(item) => <List.Item>{item}</List.Item>}
-            />
           </Card>
         </Col>
       </Row>

@@ -23,8 +23,15 @@ import {
   getTicketPaymentAnalytics,
   getMonthlyPerformanceMetrics,
   getTopRoutesMetrics,
+  getActiveProgramCarsCount,
+  getCarTypeCountByActiveProgram,
 } from "../controllers/analyticsAPI.js";
 import { getSubrouteViolationTrends } from "../controllers/violationAnalytics.js";
+import {
+  getTicketData,
+  getTicketRevenue,
+  getCancelledTicket,
+} from "../controllers/ticketAnalytics.js";
 import getUserID from "../middleware/middleware.js";
 
 const AnalyticsRouter = express.Router();
@@ -66,4 +73,28 @@ AnalyticsRouter.get(
 );
 
 AnalyticsRouter.get("/analytics/topRoutes", getUserID, getTopRoutesMetrics);
+AnalyticsRouter.get(
+  "/analytics/getTicketByPaymentStatus",
+  getUserID,
+  getTicketData,
+);
+
+AnalyticsRouter.get(
+  "/analytics/countCarsByActiveProgram",
+  getUserID,
+  getActiveProgramCarsCount,
+);
+AnalyticsRouter.get(
+  "/analytics/carTypeCountByActiveProgram",
+  getUserID,
+  getCarTypeCountByActiveProgram,
+);
+
+AnalyticsRouter.get("/analytics/getTicketRevenu", getUserID, getTicketRevenue);
+AnalyticsRouter.get(
+  "/analytics/getTotalCancelledTicket",
+  getUserID,
+  getCancelledTicket,
+);
+
 export default AnalyticsRouter;
