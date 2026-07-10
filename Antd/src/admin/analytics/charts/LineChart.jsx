@@ -32,7 +32,7 @@ const LineChart = ({
     },
 
     legend: {
-      top: 30,
+      top: 40,
     },
 
     toolbox: {
@@ -97,6 +97,8 @@ const LineChart = ({
     >
       <ReactECharts
         option={option}
+        notMerge={false} // ADD THIS: Keeps internal instance state alive (like dataZoom state)
+        lazyUpdate={true} // ADD THIS: Throttles re-draws for smoother UI feedbac
         style={{
           height,
           width: "100%",

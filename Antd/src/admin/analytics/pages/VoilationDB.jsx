@@ -21,8 +21,14 @@ import {
   SafetyOutlined,
 } from "@ant-design/icons";
 
-import axios from "axios";
+import KPIWidget from "../charts/KPIWidget.jsx";
+import StatisticCard from "../charts/StatisticCard.jsx";
+import PieChart from "../charts/PieChart.jsx";
+import BarChart from "../charts/BarChart.jsx";
 import LineChart from "../charts/LineChart.jsx";
+import AreaChart from "../charts/AreaChart.jsx";
+import ProgressChart from "../charts/ProgressChart.jsx";
+import axios from "axios";
 
 const { Title } = Typography;
 
@@ -36,123 +42,72 @@ const ViolationDashboard = ({ filters }) => {
 
   const [chartData, setChartData] = useState({ categories: [], series: [] });
 
-  const summary = {
-    totalReports: 850,
-    punishedDrivers: 230,
-    totalPenalty: 560000,
-    paidPenalty: 420000,
+  const defaultMetric = {
+    count: 0,
+    today: 0,
+    yesterday: 0,
+    trend: 0,
   };
+  const [counts, setCounts] = useState({
+    drivers: { ...defaultMetric },
+    programs: { ...defaultMetric },
+    payments: { ...defaultMetric },
+    penality: { ...defaultMetric },
+    revenue: { ...defaultMetric },
+    violation: { ...defaultMetric },
+  });
 
-  //------------------------------------
-  // Monthly violation trend
-  //------------------------------------
+  const [penalityRevenue, setpenalityRevenue] = useState(0);
+  const [cancelledTicket, setcancelledTicket] = useState(0);
 
-  const monthlyViolation = [
-    {
-      month: "January",
-      count: 120,
-    },
+  const [revenueByMethod, setrevenueByMethod] = useState([]);
+  const [violationTrend, setviolationTrend] = useState({
+    categories: [],
+    series: [],
+  });
+  const [countViolation, setcountViolation] = useState([]);
+  const [countViolationByRoute, setcountViolationByRoute] = useState([]);
 
-    {
-      month: "February",
-      count: 150,
-    },
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const endpoints = [
+          { key: "drivers", url: `${backendURL}/analytics/countDrivers` },
+          { key: "programs", url: `${backendURL}/analytics/countPrograms` },
+          { key: "payments", url: `${backendURL}/analytics/countPayments` },
+          { key: "revenue", url: `${backendURL}/analytics/revenue` },
+          { key: "violation", url: `${backendURL}/analytics/countViolations` },
+          { key: "penality", url: `${backendURL}/analytics/countPenalities` },
+        ];
 
-    {
-      month: "March",
-      count: 180,
-    },
+        const countPromises = endpoints.map(async ({ key, url }) => {
+          const { data } = await axios.get(url);
 
-    {
-      month: "April",
-      count: 200,
-    },
+          return {
+            key,
+            metric: {
+              count: data.count ?? 0,
+              today: data.today ?? 0,
+              yesterday: data.yesterday ?? 0,
+              trend: data.trend ?? 0,
+            },
+          };
+        });
 
-    {
-      month: "May",
-      count: 110,
-    },
-  ];
+        const results = await Promise.all(countPromises);
+        const newCounts = results.reduce((acc, { key, metric }) => {
+          acc[key] = metric;
+          return acc;
+        }, {});
 
-  //------------------------------------
-  // Violation by rule
-  //------------------------------------
+        setCounts(newCounts);
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      }
+    };
 
-  const ruleData = [
-    {
-      key: 1,
-      rule: "Over Speed",
-      count: 320,
-    },
-
-    {
-      key: 2,
-      rule: "Wrong Station Stop",
-      count: 210,
-    },
-
-    {
-      key: 3,
-      rule: "Driver Misconduct",
-      count: 160,
-    },
-
-    {
-      key: 4,
-      rule: "Over Loading",
-      count: 90,
-    },
-  ];
-
-  //------------------------------------
-  // Route risk analysis
-  //------------------------------------
-
-  const routeData = [
-    {
-      key: 1,
-
-      route: "Addis - Gondar",
-
-      violations: 250,
-
-      risk: "High",
-    },
-
-    {
-      key: 2,
-      route: "Bahir Dar - Debre Tabor",
-      violations: 180,
-      risk: "Medium",
-    },
-
-    {
-      key: 3,
-      route: "Addis - Jimma",
-      violations: 90,
-      risk: "Low",
-    },
-  ];
-
-  const driverRanking = [
-    {
-      key: 1,
-      driver: "Abebe Kebede",
-      violations: 35,
-    },
-
-    {
-      key: 2,
-      driver: "Tesfaye Alemu",
-      violations: 28,
-    },
-
-    {
-      key: 3,
-      driver: "Samuel Bekele",
-      violations: 21,
-    },
-  ];
+    fetchCounts();
+  }, [backendURL]);
 
   useEffect(() => {
     const fetchTrendData = async () => {
@@ -172,14 +127,6 @@ const ViolationDashboard = ({ filters }) => {
           ...new Set(rawData.map((item) => item.subroute)),
         ];
 
-        const colorPalette = [
-          "#2ecc71",
-          "#e74c3c",
-          "#3498db",
-          "#f1c40f",
-          "#9b59b6",
-          "#e67e22",
-        ];
         // 3. Map each sub-route into an ECharts series format
         const formattedSeries = uniqueSubroutes.map((subroute) => {
           // For every unique date on the timeline, find if this sub-route had data
@@ -212,6 +159,180 @@ const ViolationDashboard = ({ filters }) => {
     fetchTrendData();
   }, [backendURL]);
 
+  useEffect(() => {
+    const violationTrend = async () => {
+      try {
+        const response = await axios.get(
+          `${backendURL}/analytics/violationTrend`,
+        );
+        const rawData = response.data; // Array of { date, subroute, count }
+
+        const uniqueDates = [
+          ...new Set(rawData.map((item) => item.date)),
+        ].sort();
+        const uniqueSubroutes = [
+          ...new Set(rawData.map((item) => item.violatedRules)),
+        ];
+
+        const formattedSeries = uniqueSubroutes.map((violationTrend) => {
+          // For every unique date on the timeline, find if this sub-route had data
+          const dataPoints = uniqueDates.map((date) => {
+            const found = rawData.find(
+              (item) =>
+                item.date === date && item.violatedRules === violationTrend,
+            );
+            return found ? found.count : 0; // Default to 0 if no violations occurred on that day
+          });
+
+          return {
+            name: violationTrend,
+            type: "line",
+            smooth: true,
+            data: dataPoints,
+          };
+        });
+
+        setviolationTrend({
+          categories: uniqueDates,
+          series: formattedSeries,
+        });
+      } catch (error) {
+        console.error("Failed to parse trend analytics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    violationTrend();
+  }, [backendURL]);
+
+  useEffect(() => {
+    const countViolation = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `${backendURL}/analytics/countViolation`,
+        );
+        setcountViolation(response.data);
+      } catch (error) {
+        console.error("violation not found", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    countViolation();
+  }, [backendURL]);
+
+  useEffect(() => {
+    const countViolationByRoute = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `${backendURL}/analytics/countViolationByRoute`,
+        );
+        setcountViolationByRoute(response.data);
+      } catch (error) {
+        console.error("violation not found", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    countViolationByRoute();
+  }, [backendURL]);
+
+  const KPIData = {
+    drivers: counts.drivers.count,
+    revenue: counts.revenue.count,
+    programs: counts.programs.count,
+    violation: counts.violation.count,
+    penality: counts.penality.count,
+  };
+
+  const summary = {
+    totalReports: 850,
+    punishedDrivers: 230,
+    totalPenalty: 560000,
+    paidPenalty: 420000,
+  };
+
+  //------------------------------------
+  // Route risk analysis
+  //------------------------------------
+
+  const routeData = [
+    {
+      key: 1,
+
+      route: "Addis - Gondar",
+
+      violations: 250,
+
+      risk: "High",
+    },
+
+    {
+      key: 2,
+      route: "Bahir Dar - Debre Tabor",
+      violations: 180,
+      risk: "Medium",
+    },
+
+    {
+      key: 3,
+      route: "Addis - Jimma",
+      violations: 90,
+      risk: "Low",
+    },
+  ];
+
+  const colorPalette = [
+    "#2ecc71",
+    "#e74c3c",
+    "#3498db",
+    "#f1c40f",
+    "#9b59b6",
+    "#e67e22",
+  ];
+
+  const ruleColumns = [
+    {
+      title: "Violted Rules",
+      dataIndex: "violatedRules",
+      key: "_id",
+    },
+
+    {
+      title: "Total Violation",
+      dataIndex: "count",
+      key: "count",
+    },
+  ];
+
+  const violationByRoutColumns = [
+    {
+      title: "Routes",
+      dataIndex: "route",
+    },
+
+    {
+      title: "Total Violation",
+      dataIndex: "count",
+    },
+    {
+      title: "Risk",
+      dataIndex: "risk",
+      render: (risk) => (
+        <Tag
+          color={
+            risk === "High" ? "red" : risk === "Medium" ? "orange" : "green"
+          }
+        >
+          {risk}
+        </Tag>
+      ),
+    },
+  ];
+
   return (
     <div>
       <Title level={3}>Violation Analytics</Title>
@@ -224,7 +345,7 @@ const ViolationDashboard = ({ filters }) => {
           <Card>
             <Statistic
               title="Total Reports"
-              value={summary.totalReports}
+              value={KPIData.violation}
               prefix={<WarningOutlined />}
             />
           </Card>
@@ -263,35 +384,23 @@ const ViolationDashboard = ({ filters }) => {
         </Col>
       </Row>
 
-      {/* =========== MONTHLY TREND =========== */}
-
       <Row style={{ marginTop: 20 }}>
         <Col span={24}>
-          <Card title="Monthly Violation Trend">
-            <List
-              dataSource={monthlyViolation}
-              renderItem={(item) => (
-                <List.Item>
-                  <div style={{ width: "100%" }}>
-                    <p>{item.month}</p>
-
-                    <Progress
-                      percent={(item.count / 250) * 100}
-                      status="active"
-                    />
-                  </div>
-                </List.Item>
-              )}
-            />
-          </Card>
+          <LineChart
+            title="Violation Trends by rule types"
+            subtitle=""
+            categories={violationTrend.categories}
+            series={violationTrend.series}
+            loading={loading}
+          />
         </Col>
       </Row>
 
       <Row style={{ marginTop: 20 }}>
         <Col span={24}>
           <LineChart
-            title="Sub-Route Violation Trends"
-            subtitle="Real-time performance tracking per sub-route"
+            title="Violation Trends by Sub-routes"
+            subtitle=""
             categories={chartData.categories}
             series={chartData.series}
             loading={loading}
@@ -305,18 +414,9 @@ const ViolationDashboard = ({ filters }) => {
         <Col xs={24} lg={12}>
           <Card title="Most Violated Rules">
             <Table
-              dataSource={ruleData}
-              columns={[
-                {
-                  title: "Rule",
-                  dataIndex: "rule",
-                },
-
-                {
-                  title: "Count",
-                  dataIndex: "count",
-                },
-              ]}
+              dataSource={countViolation}
+              columns={ruleColumns}
+              rowKey="_id"
             />
           </Card>
         </Col>
@@ -341,59 +441,9 @@ const ViolationDashboard = ({ filters }) => {
         <Col span={24}>
           <Card title="Route Violation Risk">
             <Table
-              dataSource={routeData}
-              columns={[
-                {
-                  title: "Route",
-                  dataIndex: "route",
-                },
-
-                {
-                  title: "Violations",
-                  dataIndex: "violations",
-                },
-
-                {
-                  title: "Risk",
-                  dataIndex: "risk",
-                  render: (risk) => (
-                    <Tag
-                      color={
-                        risk === "High"
-                          ? "red"
-                          : risk === "Medium"
-                            ? "orange"
-                            : "green"
-                      }
-                    >
-                      {risk}
-                    </Tag>
-                  ),
-                },
-              ]}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* =========== DRIVER RANKING ========== */}
-
-      <Row style={{ marginTop: 20 }}>
-        <Col span={24}>
-          <Card title="Driver Violation Ranking">
-            <Table
-              dataSource={driverRanking}
-              columns={[
-                {
-                  title: "Driver",
-                  dataIndex: "driver",
-                },
-
-                {
-                  title: "Violation Count",
-                  dataIndex: "violations",
-                },
-              ]}
+              dataSource={countViolationByRoute}
+              columns={[...violationByRoutColumns]}
+              rowKey="_id"
             />
           </Card>
         </Col>

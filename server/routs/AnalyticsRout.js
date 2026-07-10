@@ -26,11 +26,18 @@ import {
   getActiveProgramCarsCount,
   getCarTypeCountByActiveProgram,
 } from "../controllers/analyticsAPI.js";
-import { getSubrouteViolationTrends } from "../controllers/violationAnalytics.js";
+import {
+  getSubrouteViolationTrends,
+  getVoilationTrend,
+  countViolatedRule,
+  getTotalVoilationByRoute,
+} from "../controllers/violationAnalytics.js";
 import {
   getTicketData,
   getTicketRevenue,
   getCancelledTicket,
+  getTicketRevenueTrends,
+  getTotalRevenuByMethod,
 } from "../controllers/ticketAnalytics.js";
 import getUserID from "../middleware/middleware.js";
 
@@ -95,6 +102,23 @@ AnalyticsRouter.get(
   "/analytics/getTotalCancelledTicket",
   getUserID,
   getCancelledTicket,
+);
+AnalyticsRouter.get(
+  "/analytics/getTicketPaymentTrend",
+  getUserID,
+  getTicketRevenueTrends,
+);
+AnalyticsRouter.get(
+  "/analytics/revenueByMethods",
+  getUserID,
+  getTotalRevenuByMethod,
+);
+AnalyticsRouter.get("/analytics/violationTrend", getUserID, getVoilationTrend);
+AnalyticsRouter.get("/analytics/countViolation", getUserID, countViolatedRule);
+AnalyticsRouter.get(
+  "/analytics/countViolationByRoute",
+  getUserID,
+  getTotalVoilationByRoute,
 );
 
 export default AnalyticsRouter;

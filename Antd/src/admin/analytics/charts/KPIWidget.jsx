@@ -26,7 +26,8 @@ const KPIWidget = ({
       loading={loading}
       onClick={onClick}
       style={{
-        padding: 5,
+        fontSize: 10,
+        padding: 0,
         borderRadius: 12,
         height: "100%",
         cursor: onClick ? "pointer" : "default",
@@ -42,6 +43,7 @@ const KPIWidget = ({
       >
         <div
           style={{
+            padding: 1,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -53,7 +55,7 @@ const KPIWidget = ({
 
           <div
             style={{
-              fontSize: 30,
+              fontSize: 15,
               color,
             }}
           >
@@ -62,17 +64,18 @@ const KPIWidget = ({
         </div>
         <div
           style={{
+            fontSize: 10,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
           <Statistic
+            style={{ fontSize: 10 }}
             value={value}
             precision={precision}
             prefix={prefix}
             suffix={suffix}
-            styles={{ Size: "12px" }}
           />
 
           {trend !== undefined && (

@@ -55,6 +55,12 @@ const TicketDashboard = ({ filters }) => {
 
   const [ticketRevenue, setticketRevenue] = useState(0);
   const [cancelledTicket, setcancelledTicket] = useState(0);
+  const [TicketPaymentTrend, setTicketPaymentTrend] = useState({
+    categories: [],
+    series: [],
+  });
+
+  const [revenueByMethod, setrevenueByMethod] = useState([]);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -153,6 +159,74 @@ const TicketDashboard = ({ filters }) => {
     getTotalCancelledTicket();
   }, [backendURL]);
 
+  useEffect(() => {
+    const fetchTrendData = async () => {
+      try {
+        const response = await axios.get(
+          `${backendURL}/analytics/getTicketPaymentTrend`,
+        );
+        const rawData = response.data; // Array of { date, method, totalAmount }
+
+        // 1. Extract all unique sorted dates for the X-Axis categories
+        const uniqueDates = [
+          ...new Set(rawData.map((item) => item.date)),
+        ].sort();
+
+        // 2. Identify all unique pament (each gets its own line)
+        const uniquePayment = [...new Set(rawData.map((item) => item.methods))];
+        // console.log(uniquePayment);
+        // 3. Map each payment into an ECharts series format
+        const formattedSeries = uniquePayment.map((payment) => {
+          // For every unique date on the timeline, find if this sub-route had data
+          const dataPoints = uniqueDates.map((date) => {
+            const found = rawData.find(
+              (item) => item.date === date && item.methods === payment,
+            );
+            return {
+              value: found ? found.totalRevenue : 0,
+              count: found ? found.count : 0,
+            }; // Default to 0 if no violations occurred on that day
+          });
+
+          return {
+            name: payment,
+            type: "line",
+            smooth: true,
+            data: dataPoints,
+          };
+        });
+
+        setTicketPaymentTrend({
+          categories: uniqueDates,
+          series: formattedSeries,
+        });
+      } catch (error) {
+        console.error("Failed to parse trend analytics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrendData();
+  }, [backendURL]);
+
+  useEffect(() => {
+    const getRevenueByMethod = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `${backendURL}/analytics/revenueByMethods`,
+        );
+        setrevenueByMethod(response.data);
+      } catch (error) {
+        console.error("Ticket not found", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getRevenueByMethod();
+  }, [backendURL]);
+
   if (loading) return <p>Loading chart...</p>;
 
   const colorPalette = [
@@ -171,24 +245,19 @@ const TicketDashboard = ({ filters }) => {
     cancelled: 1300,
     revenue: 2450000,
   };
-
-  const payments = [
+  const dataColumn = [
     {
-      key: 1,
-      method: "Telebirr",
-      amount: 850000,
+      title: "Method",
+      dataIndex: "methods",
     },
 
     {
-      key: 2,
-      method: "Bank",
-      amount: 700000,
+      title: "Amount",
+      dataIndex: "totalRevenue",
     },
-
     {
-      key: 3,
-      method: "Cash",
-      amount: 900000,
+      title: "No# of Tickets",
+      dataIndex: "count",
     },
   ];
 
@@ -204,7 +273,6 @@ const TicketDashboard = ({ filters }) => {
       <Title level={3}>Ticket Analytics</Title>
 
       <Divider />
-
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
           <Card>
@@ -265,7 +333,7 @@ const TicketDashboard = ({ filters }) => {
 
       <Row style={{ marginTop: 20 }} gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title="Half Day Ticket status Distribution">
+          <Card title="Hourly Ticket status Distribution">
             {getByPStatus.map((item, index) => {
               // Calculate the percentage safely, rounding it to look cleaner
               const percentage = counts.tickets
@@ -285,20 +353,23 @@ const TicketDashboard = ({ filters }) => {
         <Col xs={24} lg={12}>
           <Card title="Payment Methods">
             <Table
-              dataSource={payments}
-              columns={[
-                {
-                  title: "Method",
-                  dataIndex: "method",
-                },
-
-                {
-                  title: "Amount",
-                  dataIndex: "amount",
-                },
-              ]}
+              dataSource={revenueByMethod}
+              columns={dataColumn}
+              rowKey="_id"
             />
           </Card>
+        </Col>
+      </Row>
+
+      <Row style={{ marginTop: 20 }}>
+        <Col span={24}>
+          <LineChart
+            title="Ticket PaymentTrends"
+            subtitle="Real-time performance tracking per paid ticket"
+            categories={TicketPaymentTrend.categories}
+            series={TicketPaymentTrend.series}
+            loading={loading}
+          />
         </Col>
       </Row>
     </div>
